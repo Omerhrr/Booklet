@@ -12,6 +12,7 @@ markdown
 pydantic
 python-multipart
 openpyxl
+email_validator==2.2.0
 # numpy # Temporarily disabled
 # scikit-learn # Temporarily disabled
 # weasyprint # Temporarily disabled
