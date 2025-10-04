@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ statement_type }} Statement</title>
+    <style>
+        body { font-family: sans-serif; font-size: 10pt; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .business-info { text-align: left; }
+        .statement-title { text-align: right; }
+        .statement-title h1 { margin: 0; font-size: 24pt; color: #000; }
+        .statement-title p { margin: 0; font-size: 10pt; color: #555; }
+        .target-info { margin-bottom: 20px; padding: 10px; border: 1px solid #eee; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px 5px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f9f9f9; font-weight: bold; }
+        .text-right { text-align: right; }
+        .total-row td { font-weight: bold; border-top: 2px solid #333; border-bottom: 2px double #333; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="business-info">
+            <h2>{{ business.name }}</h2>
+        </div>
+        <div class="statement-title">
+            <h1>Account Statement</h1>
+            <p>For the period {{ start_date.strftime('%d %b %Y') }} to {{ end_date.strftime('%d %b %Y') }}</p>
+        </div>
+    </div>
+
+    <div class="target-info">
+        <strong>To:</strong>  
+
+        {{ target.name }}  
+
+        {% if target.address %}{{ target.address|replace('\n', '  
+')|safe }}{% endif %}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Transaction</th>
+                <th class="text-right">Debit</th>
+                <th class="text-right">Credit</th>
+                <th class="text-right">Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="4"><strong>Opening Balance</strong></td>
+                <td class="text-right"><strong>{{ "%.2f"|format(opening_balance) }}</strong></td>
+            </tr>
+            {% for line in lines %}
+            <tr>
+                <td>{{ line.entry.transaction_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ line.entry.description }}</td>
+                <td class="text-right">{{ "%.2f"|format(line.entry.debit) if line.entry.debit > 0 else '' }}</td>
+                <td class="text-right">{{ "%.2f"|format(line.entry.credit) if line.entry.credit > 0 else '' }}</td>
+                <td class="text-right">{{ "%.2f"|format(line.balance) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td colspan="4"><strong>Closing Balance as of {{ end_date.strftime('%d %b %Y') }}</strong></td>
+                <td class="text-right"><strong>{{ "%.2f"|format(closing_balance) }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en" x-data="themeSwitcher()" :class="{ 'dark': isDark }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | Booklet</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    
+           <script>
+        tailwind.config = {darkMode: 'class'};
+    </script>
+
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900" x-data="{ sidebarOpen: false }">
+
+    <div id="main-container" class="flex">
+
+        <!-- Sidebar -->
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
+               class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform sm:translate-x-0" 
+               aria-label="Sidebar">
+            <div class="h-full px-3 py-4 overflow-y-auto bg-white dark:bg-gray-800">
+                <a href="/dashboard" class="flex items-center ps-2.5 mb-5">
+                    <img src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg" class="h-6 me-3 sm:h-7" alt="Booklet Logo" />
+                    <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Booklet</span>
+                </a>
+
+                {% if user_perms is defined %}
+                <ul class="space-y-2 font-medium">
+                    {% include "_shared/sidebar/nav_main.html" %}
+                </ul>
+                <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200 dark:border-gray-700">
+                    {% include "_shared/sidebar/nav_settings.html" %}
+                </ul>
+                <ul class="pt-4 mt-4 space-y-2 font-medium border-t border-gray-200 dark:border-gray-700">
+                    {% include "_shared/sidebar/nav_logout.html" %}
+                </ul>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 sm:ml-64">
+            <header class="sticky top-0 z-30 flex items-center justify-between p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b dark:border-gray-700">
+                <!-- Mobile Sidebar Toggle -->
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 sm:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+                
+                <!-- Global Branch Selector -->
+                {% if user.accessible_branches and user.accessible_branches|length > 1 %}
+                <div>
+                    <button id="branch-selector-button" data-dropdown-toggle="branch-selector-dropdown" class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-500">
+                        <svg class="w-5 h-5 mr-2 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.25m11.25 0H21m-9-7.5h7.5m-7.5 0a.75.75 0 0 1-.75-.75V3.75c0-.414.336-.75.75-.75h3.75c.414 0 .75.336.75.75v12.75c0 .414-.336.75-.75.75h-3.75a.75.75 0 0 1-.75-.75Z" /></svg>
+                        {{ user.selected_branch.name }}
+                        <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                        </svg>
+                    </button>
+                    <!-- Dropdown menu -->
+                    <div id="branch-selector-dropdown" class="z-40 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
+                        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="branch-selector-button">
+                            {% for branch in user.accessible_branches %}
+                            <li>
+                                <button 
+                                    hx-post="/team/users/set-branch/{{ branch.id }}"
+                                    class="w-full text-left block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white {% if branch.id == user.selected_branch.id %} font-bold text-blue-600 dark:text-blue-500 {% endif %}">
+                                    {{ branch.name }}
+                                </button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% else %}
+                <!-- If only one branch, just display the name without a dropdown -->
+                <div class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <svg class="w-5 h-5 mr-2 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.25m11.25 0H21m-9-7.5h7.5m-7.5 0a.75.75 0 0 1-.75-.75V3.75c0-.414.336-.75.75-.75h3.75c.414 0 .75.336.75.75v12.75c0 .414-.336.75-.75.75h-3.75a.75.75 0 0 1-.75-.75Z" /></svg>
+                    {{ user.selected_branch.name }}
+                </div>
+                {% endif %}
+
+                <!-- User Profile Dropdown (optional, can be added later  ) -->
+                <div class="flex items-center">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Welcome, {{ user.username }}</span>
+                </div>
+                <div class="flex items-center">
+                    <button @click="toggleTheme" type="button" class="p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700">
+                        <span class="sr-only">Toggle theme</span>
+                        <svg x-show="!isDark" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg x-show="isDark" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 5.05A1 1 0 003.636 6.464l.707.707a1 1 0 001.414-1.414l-.707-.707zM3 11a1 1 0 100-2H2a1 1 0 100 2h1zM6.464 14.364a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707z"></path></svg>
+                    </button>
+                </div>
+            </header>
+
+
+            <main class="p-4 sm:p-6 lg:p-8">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    <!-- Toast Notification Container -->
+    <div
+        x-data="{ show: false, message: '', type: 'success' }"
+        x-on:show-toast.window="message = $event.detail.message; type = $event.detail.type || 'success'; show = true; setTimeout(() => show = false, 5000)"
+        x-show="show"
+        x-transition
+        x-cloak
+        class="fixed top-5 right-5 z-50 max-w-xs p-4 rounded-lg shadow-lg"
+        :class="{
+            'bg-green-100 border-green-400 text-green-700 dark:bg-green-800 dark:text-green-200 dark:border-green-700': type === 'success',
+            'bg-red-100 border-red-400 text-red-700 dark:bg-red-800 dark:text-red-200 dark:border-red-700': type === 'error'
+        }"
+        role="alert"
+    >
+        <p class="font-bold" x-text="type === 'success' ? 'Success' : 'Error'"></p>
+        <p class="text-sm" x-text="message"></p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function ( ) {
+            // Get the modal element
+            const modalEl = document.getElementById('adjust-stock-modal');
+            if (!modalEl) return;
+
+            // Create a new Modal object
+            const modal = new Flowbite.Modal(modalEl, {
+                // Modal options here
+            });
+
+            // Find all buttons that can toggle this modal
+            const toggleButtons = document.querySelectorAll('[data-modal-toggle="adjust-stock-modal"]');
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    // Get data from the clicked button
+                    const productId = button.dataset.productId;
+                    const productName = button.dataset.productName;
+
+                    // Find the form and the name span inside the modal
+                    const form = modalEl.querySelector('#adjust-stock-form');
+                    const productNameSpan = modalEl.querySelector('#adjust-stock-product-name');
+
+                    if (form) {
+                        // Construct the correct URL
+                        const actionUrl = `/inventory/products/${productId}/adjust-stock`;
+                        // Set the hx-post attribute on the form
+                        form.setAttribute('hx-post', actionUrl);
+                        // Also set the target for the OOB swap
+                        form.setAttribute('hx-target', `#product-row-${productId}`);
+                    }
+                    if (productNameSpan) {
+                        productNameSpan.innerText = productName;
+                    }
+                    
+                    // Show the modal
+                    modal.show();
+                });
+            });
+        });
+    </script>
+    <script>
+        function themeSwitcher() {
+            return {
+                isDark: true,
+                init() {
+                    const savedTheme = localStorage.getItem('theme');
+                    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                        this.isDark = true;
+                    } else {
+                        this.isDark = false;
+                    }
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>

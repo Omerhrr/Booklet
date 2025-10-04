@@ -1,0 +1,42 @@
+{# app/templates/reports/consolidated_dashboard.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <header>
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Consolidated Branch Analytics</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A high-level performance overview of all branches for the current month.</p>
+    </header>
+
+    <main class="mt-8">
+        <!-- Branch KPI Cards -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {% for branch_data in report_data %}
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">{{ branch_data.branch_name }}</h2>
+                <div class="mt-4 space-y-3">
+                    <div class="flex justify-between items-baseline">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Sales</h3>
+                        <p class="text-xl font-semibold text-green-600 dark:text-green-500">{{ "%.2f"|format(branch_data.total_sales) }}</p>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Purchases</h3>
+                        <p class="text-xl font-semibold text-orange-600 dark:text-orange-500">{{ "%.2f"|format(branch_data.total_purchases) }}</p>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-2 border-t dark:border-gray-700">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Gross Profit</h3>
+                        <p class="text-xl font-semibold {% if branch_data.gross_profit >= 0 %}text-blue-600 dark:text-blue-500{% else %}text-red-600 dark:text-red-500{% endif %}">
+                            {{ "%.2f"|format(branch_data.gross_profit) }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-full p-10 text-center bg-white dark:bg-gray-800 rounded-lg shadow">
+                <p class="text-gray-500 dark:text-gray-400">No branch data available to display.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+{% endblock %}

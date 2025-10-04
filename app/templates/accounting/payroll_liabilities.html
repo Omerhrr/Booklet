@@ -1,0 +1,68 @@
+{# In: app/templates/accounting/payroll_liabilities.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Payroll Liabilities</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">View and pay outstanding net pay, tax, and pension contributions for <span class="font-semibold text-blue-500">{{ user.selected_branch.name }}</span>.</p>
+    </div>
+
+    <!-- Tabbed Interface -->
+    <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="liability-tabs" data-tabs-toggle="#liability-content" role="tablist">
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="netpay-tab" data-tabs-target="#netpay" type="button" role="tab" aria-controls="netpay" aria-selected="true">Net Pay to Employees</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="paye-tab" data-tabs-target="#paye" type="button" role="tab" aria-controls="paye" aria-selected="false">PAYE (Tax) Payable</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="pension-tab" data-tabs-target="#pension" type="button" role="tab" aria-controls="pension" aria-selected="false">Pension Payable</button>
+            </li>
+        </ul>
+    </div>
+
+    <div id="liability-content">
+        <!-- Net Pay Tab Panel -->
+        <div class="hidden" id="netpay" role="tabpanel" aria-labelledby="netpay-tab">
+
+                <div class="mb-4">
+        <input 
+            type="text" 
+            x-model.debounce.300ms="ledgerSearch"
+            placeholder="Search by account or description..."
+            class="block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+        >
+    </div>
+            {% set title = 'Net Pay' %}
+            {% set account_name = 'Payroll Liabilities' %}
+            {% set entries = net_pay_entries %}
+            {% set balance = net_pay_balance %}
+            {% include 'accounting/partials/liability_ledger_panel.html' %}
+        </div>
+        <!-- PAYE Tab Panel -->
+        <div class="hidden" id="paye" role="tabpanel" aria-labelledby="paye-tab">
+            {% set title = 'PAYE (Tax)' %}
+            {% set account_name = 'PAYE Payable' %}
+            {% set entries = paye_entries %}
+            {% set balance = paye_balance %}
+            {% include 'accounting/partials/liability_ledger_panel.html' %}
+        </div>
+        <!-- Pension Tab Panel -->
+        <div class="hidden" id="pension" role="tabpanel" aria-labelledby="pension-tab">
+            {% set title = 'Pension' %}
+            {% set account_name = 'Pension Payable' %}
+            {% set entries = pension_entries %}
+            {% set balance = pension_balance %}
+            {% include 'accounting/partials/liability_ledger_panel.html' %}
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+{% endblock %}

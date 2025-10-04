@@ -1,0 +1,172 @@
+{# In: app/templates/purchases/create_purchase_bill.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div 
+    class="py-10 px-4 sm:px-6 lg:px-8"
+    x-data="purchaseBillForm" {# <-- FIX: Call the data object directly #}
+    x-init="init(
+        {{ user.business.is_vat_registered | tojson }},
+        '{{ user.selected_branch.currency }}'
+    )"
+>
+    <form method="POST" action="/purchases/preview-bill">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">New Purchase Bill</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Record a new bill for branch: <span class="font-semibold text-blue-500">{{ user.selected_branch.name }}</span></p>
+            </div>
+            <div>
+                <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Preview Bill</button>
+            </div>
+        </div>
+
+        <!-- Bill Header Inputs -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <div>
+                <label for="vendor_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Vendor</label>
+                <select id="vendor_id" name="vendor_id" class="bg-gray-50 border border-gray-300 text-gray-300 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    <option disabled selected value="">Select a vendor</option>
+                    {% for vendor in vendors %}
+                    <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                    {% else %}
+                    <option disabled>No vendors in this branch</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="bill_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Bill Date</label>            
+                <input type="date" id="bill_date" name="bill_date" value="{{ today_date.strftime('%Y-%m-%d') }}" class="bg-gray-50 border border-gray-300 text-gray-300 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+            </div>
+            <div>
+                <label for="due_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Due Date</label>
+                <input type="date" id="due_date" name="due_date" value="{{ today_date.strftime('%Y-%m-%d') }}" class="bg-gray-50 border border-gray-300 text-gray-300 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+            </div>
+        </div>
+
+        <!-- Bill Items Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <table class="min-w-full">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Product</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase w-24">Qty</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase w-32">Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase w-32">Total</th>
+                        <th class="w-12"><span class="sr-only">Remove</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(item, index) in items" :key="index">
+                        <tr class="border-b dark:border-gray-700">
+                            <td class="p-2">
+                                <select x-model.number="item.product_id" @change="handleProductChange(index)" class="bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                    <option value="">Select a product</option>
+                                    <template x-for="product in productOptions" :key="product.id">
+                                        <option :value="product.id" x-text="product.name"></option>
+                                    </template>
+                                </select>
+                            </td>
+                            <td class="p-2"><input type="number" x-model.number="item.quantity" @input="updateTotals()" class="bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></td>
+                            <td class="p-2"><input type="number" step="0.01" x-model.number="item.price" @input="updateTotals()" class="bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></td>
+                            <td class="p-2"><span class="text-sm font-medium text-gray-900 dark:text-white" x-text="formatCurrency((item.quantity || 0) * (item.price || 0))"></span></td>
+                            <td class="p-2 text-center"><button type="button" @click="removeItem(index)" class="text-red-500 hover:text-red-700">&times;</button></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <div class="p-4">
+                <button type="button" @click="addItem()" class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5">Add Row</button>
+            </div>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="flex justify-end mt-6">
+            <div class="w-full max-w-sm space-y-2 text-gray-900 dark:text-white">
+                <div class="flex justify-between">
+                    <span class="text-gray-500 dark:text-gray-400">Subtotal</span>
+                    <span x-text="formatCurrency(subTotal)"></span>
+                </div>
+                <div class="flex justify-between items-center" x-show="isVatRegistered" style="display: none;">
+                    <label for="vat_amount" class="text-gray-500 dark:text-gray-400">Input VAT</label>
+                    <input type="number" step="0.01" name="vat_amount" x-model.number="vatAmount" @input="updateTotals" class="bg-gray-50 border border-gray-300 text-gray-400 text-sm rounded-lg w-32 p-2 text-right dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div class="flex justify-between font-bold text-lg border-t pt-2 dark:border-gray-700">
+                    <span>Grand Total</span>
+                    <span x-text="formatCurrency(grandTotal)"></span>
+                </div>
+            </div>
+        </div>
+        
+        <input type="hidden" name="items_json" :value="JSON.stringify(items)">
+        <input type="hidden" name="vat_amount" :value="vatAmount">
+    </form>
+</div>
+
+<script id="purchase-data" type="application/json">
+    {{ products | tojson | safe }}
+</script>
+
+<script>
+// --- THE FIX: Define the component correctly using Alpine.data ---
+document.addEventListener('alpine:init', () => {
+    Alpine.data('purchaseBillForm', () => ({
+        items: [],
+        productOptions: [],
+        currency: 'USD',
+        isVatRegistered: false,
+        subTotal: 0.0,
+        vatAmount: 0.0,
+        grandTotal: 0.0,
+
+        init(isVat, branchCurrency) {
+            this.isVatRegistered = isVat;
+            this.currency = branchCurrency;
+            const dataEl = document.getElementById('purchase-data');
+            this.productOptions = JSON.parse(dataEl.textContent);
+            if (this.items.length === 0) {
+                this.addItem();
+            }
+        },
+
+        updateTotals() {
+            this.subTotal = this.items.reduce((total, item) => {
+                return total + ((item.quantity || 0) * (item.price || 0));
+            }, 0);
+            this.grandTotal = this.subTotal + (this.vatAmount || 0);
+        },
+
+        addItem() {
+            this.items.push({ product_id: '', quantity: 1, price: 0.00 });
+            this.updateTotals();
+        },
+
+        removeItem(index) {
+            if (this.items.length > 1) {
+                this.items.splice(index, 1);
+                this.updateTotals();
+            }
+        },
+
+        handleProductChange(index) {
+            const selectedProductId = this.items[index].product_id;
+            const product = this.productOptions.find(p => p.id == selectedProductId);
+            if (product) {
+                this.items[index].price = product.purchase_price;
+            } else {
+                this.items[index].price = 0.00;
+            }
+            this.updateTotals();
+        },
+
+        formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: this.currency
+            }).format(value || 0);
+        }
+    }));
+});
+</script>
+{% endblock %}

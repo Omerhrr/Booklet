@@ -1,0 +1,233 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div 
+    class="py-10 px-4 sm:px-6 lg:px-8"
+    x-data="{ 
+        activeTab: 'bills',
+        billSearch: '',
+        ledgerSearch: ''
+    }"
+>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">{{ vendor.name }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage vendor details, transactions, and payments.</p>
+        </div>
+        <div>
+            <a href="/crm/vendors" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:underline">
+                &larr; Back to All Vendors
+            </a>
+        </div>
+    </div>
+
+    <!-- Tab Headers -->
+    <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+            <li class="me-2" role="presentation">
+                <button @click="activeTab = 'bills'" :class="{ 'border-blue-600 text-blue-600 dark:text-blue-500 dark:border-blue-500': activeTab === 'bills', 'border-transparent hover:text-gray-300 hover:border-gray-300 dark:hover:text-gray-300': activeTab !== 'bills' }" class="inline-block p-4 border-b-2 rounded-t-lg  text-white" type="button">Purchase Bills</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button @click="activeTab = 'ledger'" :class="{ 'border-blue-600 text-blue-600 dark:text-blue-500 dark:border-blue-500': activeTab === 'ledger', 'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300': activeTab !== 'ledger' }" class="inline-block p-4 border-b-2 rounded-t-lg  text-white" type="button">Vendor Ledger</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button @click="activeTab = 'payment'" :class="{ 'border-blue-600 text-blue-600 dark:text-blue-500 dark:border-blue-500': activeTab === 'payment', 'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300': activeTab !== 'payment' }" class="inline-block p-4 border-b-2 rounded-t-lg  text-white" type="button">Record Payment</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button @click="activeTab = 'info'" :class="{ 'border-blue-600 text-blue-600 dark:text-blue-500 dark:border-blue-500': activeTab === 'info', 'border-transparent hover:text-gray-300 hover:border-gray-300 dark:hover:text-gray-300': activeTab !== 'info' }" class="inline-block p-4 border-b-2 rounded-t-lg text-white" type="button">Overview</button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Content Panels -->
+    <div>
+        <!-- Purchase Bills Panel -->
+        <div x-show="activeTab === 'bills'" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <div class="p-4 border-b dark:border-gray-700">
+                <input type="text" x-model.debounce.300ms="billSearch" placeholder="Search by Bill #" class="block w-full md:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bill #</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Amount</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for bill in bills_data %}
+                        <tr x-show="billSearch === '' || '{{ bill.bill_number | lower }}'.includes(billSearch.toLowerCase())">
+                            <td class="px-6 py-4 text-sm text-gray-300">{{ bill.bill_date.split('T')[0] }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-blue-400"><a href="/purchases/{{ bill.id }}" class="hover:underline">{{ bill.bill_number }}</a></td>
+                            <td class="px-6 py-4 text-sm text-right text-gray-300">{{ "%.2f"|format(bill.total_amount) }}</td>
+                            <td class="px-6 py-4 text-sm text-center">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if bill.status == 'Paid' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                    {% elif bill.status == 'Partially Paid' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                    {% else %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 {% endif %}">
+                                    {{ bill.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center py-10 text-gray-500 dark:text-gray-400">No purchase bills found for this vendor.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Vendor Ledger Panel -->
+        <div x-show="activeTab === 'ledger'" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Ledger Details</h3>
+                <input type="text" x-model.debounce.300ms="ledgerSearch" placeholder="Search description..." class="block w-full md:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <div>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">Balance Due:</span>
+                    <span class="text-lg font-bold text-red-600 dark:text-red-500">{{ "%.2f"|format(final_balance) }}</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Transaction</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Debit</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Credit</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for item in ledger_data %}
+                        <tr x-show="ledgerSearch === '' || '{{ item.entry.description | lower }}'.includes(ledgerSearch.toLowerCase())">
+                            <td class="px-6 py-4 text-sm text-gray-300">{{ item.entry.transaction_date.split('T')[0] }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-300">
+                                <p>{{ item.entry.description }}</p>
+                                {% if item.entry.purchase_bill_id %}
+                                    <a href="/purchases/{{ item.entry.purchase_bill_id }}" class="text-xs text-blue-400 hover:underline">View Bill</a>
+                                {% endif %}
+                                {% if item.entry.debit_note_id %}
+                                    <a href="/purchases/debit-note/{{ item.entry.debit_note_id }}" class="text-xs text-purple-400 hover:underline">View Debit Note</a>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-right text-green-500">{{ "%.2f"|format(item.entry.debit) if item.entry.account.name == 'Accounts Payable' else '' }}</td>
+                            <td class="px-6 py-4 text-sm text-right text-red-500">{{ "%.2f"|format(item.entry.credit) if item.entry.account.name == 'Accounts Payable' else '' }}</td>
+                            <td class="px-6 py-4 text-sm text-right font-medium text-gray-300">{{ "%.2f"|format(item.balance) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center py-10 text-gray-500 dark:text-gray-400">No ledger entries found for this vendor.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Record Payment Panel -->
+        <div x-show="activeTab === 'payment'" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm" x-data="paymentForm()" x-init="init()">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Record a Payment Against a Bill</h3>
+            <form method="POST" action="/purchases/record-payment">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Bill Selection -->
+                        <div>
+                            <label for="bill_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Bill</label>
+                            <select name="bill_id" id="bill_id" x-model.number="selectedBillId" @change="updateAmountDue()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                <option value="">-- Select an Unpaid Bill --</option>
+                                <template x-for="bill in payableBills" :key="bill.id">
+                                    <option :value="bill.id" x-text="`${bill.bill_number} (Due: ${formatCurrency(bill.total_amount - bill.paid_amount)})`"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- Amount Paid -->
+                        <div>
+                            <label for="amount_paid" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Amount to Pay</label>
+                            <input type="number" step="0.01" name="amount_paid" id="amount_paid" x-model.number="amountToPay" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        </div>
+
+                        <!-- Payment Date -->
+                        <div>
+                            <label for="payment_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Payment Date</label>
+                            <input type="date" name="payment_date" id="payment_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                         <!-- Payment Account -->
+                        <div>
+                            <label for="payment_account_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Payment From</label>
+                            <select name="payment_account_id" id="payment_account_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                {% for account in payment_accounts %}
+                                <option value="{{ account.id }}">{{ account.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save Payment</button>
+                    </div>
+                </form>
+                <!-- ... form content ... -->
+            
+        </div>
+
+        <!-- Contact Info Panel -->
+        <div x-show="activeTab === 'info'" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+             <div class="mb-6 pb-6 border-b dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Download Statement</h3>
+            <form action="/reports/statement/vendor/{{ vendor.id }}/pdf" method="GET" target="_blank" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="start_date_vendor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date</label>
+                    <input type="date" name="start_date" id="start_date_vendor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <div>
+                    <label for="end_date_vendor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date</label>
+                    <input type="date" name="end_date" id="end_date_vendor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <div>
+                    <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Generate PDF</button>
+                </div>
+            </form>
+        </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contact Information</h3>
+            {% include "crm/partials/vendor_detail_overview.html" %}
+        </div>
+    </div>
+</div>
+
+<script id="payable-bills-data" type="application/json">
+    {{ payable_bills_data | tojson | safe }}
+</script>
+<script>
+function paymentForm() {
+    return {
+        payableBills: [],
+        selectedBillId: '',
+        amountToPay: 0.00,
+        init() {
+            const dataElement = document.getElementById('payable-bills-data');
+            if (dataElement) { this.payableBills = JSON.parse(dataElement.textContent); }
+            const dateInput = document.querySelector('input[name="payment_date"]');
+            if(dateInput) { dateInput.value = new Date().toISOString().split('T')[0]; }
+        },
+        updateAmountDue() {
+            if (!this.selectedBillId) { this.amountToPay = 0.00; return; }
+            const bill = this.payableBills.find(b => b.id == this.selectedBillId);
+            if (bill) { this.amountToPay = (bill.total_amount - bill.paid_amount).toFixed(2); }
+        },
+        formatCurrency(value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value); }
+    };
+}
+</script>
+<script>
+    // Pre-fill the end date to today
+    document.getElementById('start_date_vendor').value = new Date().toISOString().split('T')[0];
+    // Pre-fill the start date to the beginning of the month
+    const today = new Date();
+    document.getElementById('end_date_vendor').value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="print:hidden">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Bank Statement: {{ account.name }}</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Transaction history for this account.</p>
+            </div>
+            <a href="/banking/accounts" class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">&larr; Back to Bank Accounts</a>
+        </div>
+    </div>
+
+    <form id="report-filters" hx-get="/banking/accounts/{{ account.id }}" hx-target="body" hx-swap="innerHTML" hx-push-url="true" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm my-8 print:hidden">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div>
+                <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date</label>
+                <input type="date" name="start_date" value="{{ filters.start_date.strftime('%Y-%m-%d') if filters.start_date else '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date</label>
+                <input type="date" name="end_date" value="{{ filters.end_date.strftime('%Y-%m-%d') if filters.end_date else '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Transactions</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Closing Balance: <span class="font-bold text-blue-500">{{ "%.2f"|format(closing_balance) }}</span></p>
+            </div>
+            <div class="flex gap-2 print:hidden">
+                <a href="/banking/accounts/{{ account.id }}/export/pdf?{{ request.url.query }}" target="_blank" class="text-white bg-red-700 hover:bg-red-800 font-medium rounded-lg text-sm px-4 py-2">View PDF</a>
+                <a href="/banking/accounts/{{ account.id }}/export/excel?{{ request.url.query }}" class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-4 py-2">Export Excel</a>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Debit</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr class="bg-gray-50 dark:bg-gray-700/50">
+                        <td colspan="4" class="px-6 py-2 font-semibold text-gray-600 dark:text-gray-300">Opening Balance</td>
+                        <td class="px-6 py-2 text-right font-semibold text-gray-600 dark:text-gray-300">{{ "%.2f"|format(opening_balance) }}</td>
+                    </tr>
+                    {% for item in ledger %}
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ item.entry.transaction_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-400">{{ item.entry.description }}</td>
+                        <td class="px-6 py-4 text-sm text-right text-green-400">{{ "%.2f"|format(item.entry.debit) if item.entry.debit > 0 else '' }}</td>
+                        <td class="px-6 py-4 text-sm text-right text-red-400">{{ "%.2f"|format(item.entry.credit) if item.entry.credit > 0 else '' }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-medium text-gray-300">{{ "%.2f"|format(item.balance) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center py-10 text-gray-500">No transactions found for this period.</td></tr>
+                    {% endfor %}
+                </tbody>
+                 <tfoot class="bg-gray-100 dark:bg-gray-900/50">
+                    <tr>
+                        <td colspan="4" class="px-6 py-3 text-right text-sm font-bold text-gray-900 dark:text-white uppercase">Closing Balance</td>
+                        <td class="px-6 py-3 text-right text-sm font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(closing_balance) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

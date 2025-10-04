@@ -1,0 +1,160 @@
+{# In: app/templates/dashboard/dashboard.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8" x-data="dashboard()">
+    <header>
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Dashboard</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Showing overview for branch: <span class="font-semibold text-blue-500">{{ user.selected_branch.name }}</span></p>
+    </header>
+
+    <main class="mt-8">
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <!-- Top Row: 4 Main KPIs -->
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Receivables</h3><p class="mt-2 text-3xl font-bold text-green-600 dark:text-green-500">{{ "%.2f"|format(dashboard_data.kpis.total_receivables) }}</p></div>
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Payables</h3><p class="mt-2 text-3xl font-bold text-red-600 dark:text-red-500">{{ "%.2f"|format(dashboard_data.kpis.total_payables) }}</p></div>
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cash & Bank Balance</h3><p class="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-500">{{ "%.2f"|format(dashboard_data.kpis.cash_balance) }}</p></div>
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit (YTD)</h3><p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(dashboard_data.kpis.net_profit_ytd) }}</p></div>
+
+            <!-- Second Row: 2 Main Charts -->
+            <div class="lg:col-span-2 p-6 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Income vs. Expenses (6 Months)</h3><div id="income-expense-chart" class="mt-4" style="height: 300px;"></div></div>
+            <div class="lg:col-span-2 p-6 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">A/R and A/P Aging Summary</h3><div id="aging-chart" class="mt-4" style="height: 300px;"></div></div>
+
+            <!-- Third Row: 4 Secondary KPIs -->
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-xs font-medium text-gray-500 dark:text-gray-400">Sales (This Month)</h3><p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(dashboard_data.kpis.sales_mtd) }}</p></div>
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-xs font-medium text-gray-500 dark:text-gray-400">Expenses (This Month)</h3><p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(dashboard_data.kpis.expenses_mtd) }}</p></div>
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-xs font-medium text-gray-500 dark:text-gray-400">Bills Overdue</h3><p class="mt-1 text-2xl font-bold text-red-500">{{ "%.2f"|format(dashboard_data.kpis.bills_overdue) }}</p></div>
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><h3 class="text-xs font-medium text-gray-500 dark:text-gray-400">New Customers (This Month)</h3><p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ dashboard_data.kpis.new_customers_mtd }}</p></div>
+
+            <!-- Fourth Row: 2 Lists -->
+            <div class="lg:col-span-2 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top 5 Unpaid Invoices</h3>
+                <ul class="space-y-3">
+                    {% for invoice in dashboard_data.lists.top_unpaid_invoices %}
+                    <li class="flex justify-between items-center text-sm">
+                        <div>
+                            <p class="font-medium text-gray-800 dark:text-gray-200">{{ invoice.customer_name }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Due: {{ invoice.due_date }}</p>
+                        </div>
+                        <span class="font-semibold text-red-500">{{ "%.2f"|format(invoice.balance) }}</span>
+                    </li>
+                    {% else %}<p class="text-sm text-gray-500 dark:text-gray-400">No unpaid invoices. Great job!</p>{% endfor %}
+                </ul>
+            </div>
+            <div class="lg:col-span-2 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for txn in dashboard_data.lists.recent_transactions %}
+                    <li class="py-3 flex justify-between items-center">
+                        <div class="text-sm">
+                            <p class="font-medium text-gray-800 dark:text-gray-200">{{ txn.description }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ txn.date }} - {{ txn.account_name }}</p>
+                        </div>
+                        <div>
+                            {% if txn.debit > 0 %}<span class="font-semibold text-green-500">+{{ "%.2f"|format(txn.debit) }}</span>
+                            {% else %}<span class="font-semibold text-red-500">-{{ "%.2f"|format(txn.credit) }}</span>{% endif %}
+                        </div>
+                    </li>
+                    {% else %}<p class="text-sm text-gray-500 dark:text-gray-400">No recent transactions.</p>{% endfor %}
+                </ul>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+// The Alpine.js and ECharts script remains unchanged as it was already expecting JSON data.
+function dashboard() {
+    return {
+        salesPurchasesData: {{ dashboard_data.charts.sales_purchases | tojson | safe }},
+        expenseData: {{ dashboard_data.charts.expense_breakdown | tojson | safe }},
+        incomeExpenseData: {{ dashboard_data.charts.income_vs_expense | tojson | safe }},
+        agingData: {{ dashboard_data.charts.aging_summary | tojson | safe }},
+
+        init() {
+            this.$nextTick(() => {
+                this.initSalesPurchasesChart();
+                this.initExpenseChart();
+                this.initIncomeExpenseChart();
+                this.initAgingChart();
+            });
+        },
+
+        initSalesPurchasesChart() {
+            const chartDom = document.getElementById('sales-purchases-chart');
+            if (!chartDom) return;
+            const myChart = echarts.init(chartDom, 'dark');
+            const option = {
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['Sales', 'Purchases'] },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', boundaryGap: false, data: this.salesPurchasesData.labels },
+                yAxis: { type: 'value' },
+                series: [
+                    { name: 'Sales', type: 'line', smooth: true, data: this.salesPurchasesData.sales, itemStyle: { color: '#4ade80' } },
+                    { name: 'Purchases', type: 'line', smooth: true, data: this.salesPurchasesData.purchases, itemStyle: { color: '#f87171' } }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        },
+
+        initIncomeExpenseChart() {
+            const chartDom = document.getElementById('income-expense-chart');
+            if (!chartDom) return;
+            const myChart = echarts.init(chartDom, 'dark');
+            const option = {
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['Income', 'Expenses'] },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'category', data: this.incomeExpenseData.labels },
+                yAxis: { type: 'value' },
+                series: [
+                    { name: 'Income', type: 'bar', data: this.incomeExpenseData.income, itemStyle: { color: '#22c55e' } },
+                    { name: 'Expenses', type: 'bar', data: this.incomeExpenseData.expenses, itemStyle: { color: '#ef4444' } }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        },
+
+        initAgingChart() {
+            const chartDom = document.getElementById('aging-chart');
+            if (!chartDom) return;
+            const myChart = echarts.init(chartDom, 'dark');
+            const option = {
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                legend: { data: ['Receivables', 'Payables'] },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'value' },
+                yAxis: { type: 'category', data: this.agingData.labels },
+                series: [
+                    { name: 'Receivables', type: 'bar', stack: 'total', label: { show: true }, emphasis: { focus: 'series' }, data: this.agingData.receivables, itemStyle: { color: '#16a34a' } },
+                    { name: 'Payables', type: 'bar', stack: 'total', label: { show: true }, emphasis: { focus: 'series' }, data: this.agingData.payables.map(v => -v), itemStyle: { color: '#dc2626' } }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        },
+        
+        initExpenseChart() {
+            const chartDom = document.getElementById('expense-chart');
+            if (!chartDom) return;
+            const myChart = echarts.init(chartDom, 'dark');
+            const option = {
+                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                legend: { show: false },
+                series: [
+                    { name: 'Expenses', type: 'pie', radius: ['40%', '70%'], avoidLabelOverlap: false, label: { show: false }, emphasis: { label: { show: true, fontSize: '20', fontWeight: 'bold' } }, labelLine: { show: false }, data: this.expenseData }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        }
+    }
+}
+</script>
+{% endblock %}

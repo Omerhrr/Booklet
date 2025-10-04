@@ -1,0 +1,94 @@
+{# Create new file: app/templates/analytics/comparison_tool.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Analytics Comparison Tool</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Select metrics and dimensions to build a custom report.</p>
+    </header>
+
+    <!-- Filter Form -->
+    <form hx-get="/analytics/comparison" hx-target="body" hx-swap="innerHTML" hx-push-url="true" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Metrics Selection -->
+            <div class="md:col-span-2">
+                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Metrics to Compare</label>
+                <div class="grid grid-cols-2 gap-2">
+                    {% for option in metric_options %}
+                    <div class="flex items-center">
+                        <input id="metric-{{ loop.index }}" name="metrics" type="checkbox" value="{{ option }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded" {% if option in filters.metrics %}checked{% endif %}>
+                        <label for="metric-{{ loop.index }}" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ option }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Dimension & Dates -->
+            <div>
+                <label for="dimension" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Group By</label>
+                <select name="dimension" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700">
+                    {% for option in dimension_options %}
+                    <option value="{{ option|lower|replace(' ', '_') }}" {% if filters.dimension == option|lower|replace(' ', '_') %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date</label>
+                    <input type="date" name="start_date" value="{{ filters.start_date.strftime('%Y-%m-%d') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700">
+                </div>
+                <div>
+                    <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date</label>
+                    <input type="date" name="end_date" value="{{ filters.end_date.strftime('%Y-%m-%d') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700">
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 text-right">
+            <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-8 py-2.5">Generate Analysis</button>
+        </div>
+    </form>
+
+    <!-- Results Area -->
+   <div id="analytics-results">
+        {% if chart_data and not chart_data.get('error') %}
+            <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm" x-data="comparisonChart()" x-init="init()">
+                <div id="comparison-chart" style="height: 450px;"></div>
+            </div>
+            <script id="chart-data" type="application/json">
+                {{ chart_data | tojson | safe }}
+            </script>
+            <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('comparisonChart', () => ({
+                    init() {
+                        const dataEl = document.getElementById('chart-data');
+                        if (!dataEl) return;
+                        const data = JSON.parse(dataEl.textContent);
+                        const chartDom = document.getElementById('comparison-chart');
+                        const myChart = echarts.init(chartDom, 'dark');
+                        const option = {
+                            tooltip: { trigger: 'axis' },
+                            legend: { data: data.series.map(s => s.name), textStyle: { color: '#ccc' } },
+                            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                            xAxis: { type: 'category', data: data.categories, axisLine: { lineStyle: { color: '#ccc' } } },
+                            yAxis: { type: 'value', axisLine: { lineStyle: { color: '#ccc' } } },
+                            series: data.series
+                        };
+                        myChart.setOption(option);
+                        window.addEventListener('resize', () => myChart.resize());
+                    }
+                }))
+            });
+        </script>
+        {% elif chart_data and chart_data.get('error') %}
+            <div class="p-10 text-center bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <p class="text-red-600 font-semibold">An error occurred: {{ chart_data.error }}</p>
+            </div>
+        {% else %}
+            <div class="p-10 text-center bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-dashed dark:border-gray-700">
+                <p class="text-gray-500">Select metrics and click "Generate Analysis" to see your custom report.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

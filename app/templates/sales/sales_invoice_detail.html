@@ -1,0 +1,93 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <!-- Header with Actions -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">
+                Sales Invoice <span class="text-blue-600">{{ invoice.invoice_number }}</span>
+            </h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Details of the sale to {{ invoice.customer.name }}.
+            </p>
+        </div>
+        <div>
+            <a href="/sales/history" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:underline">
+                &larr; Back to History
+            </a>
+        </div>
+    </div>
+
+    <!-- Invoice Details (uses the same layout as the preview) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
+        <!-- Invoice Header -->
+        <div class="flex justify-between items-start mb-8 pb-8 border-b dark:border-gray-700">
+            <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Customer</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ invoice.customer.name }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300">{{ invoice.customer.address or '' }}</p>
+            </div>
+            <div class="text-right">
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white uppercase">Sales Invoice</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ invoice.invoice_number }}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-8 mb-8">
+             <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Invoice Date</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ invoice.invoice_date.strftime('%B %d, %Y') }}</p>
+            </div>
+            <div class="text-center">
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Due Date</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ invoice.due_date.strftime('%B %d, %Y') }}</p>
+            </div>
+            <div class="text-right">
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h4>
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    {% if invoice.status == 'Paid' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                    {% elif invoice.status == 'Partially Paid' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                    {% else %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 {% endif %}">
+                    {{ invoice.status }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="min-w-full mb-8">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">Product</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-gray-600 dark:text-gray-300">Quantity</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-gray-600 dark:text-gray-300">Price</th>
+                    <th class="px-4 py-2 text-right text-sm font-semibold text-gray-600 dark:text-gray-300">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items %}
+                <tr class="border-b dark:border-gray-700">
+                    <td class="py-3 px-4 text-left text-gray-300">{{ item.product.name }}</td>
+                    <td class="py-3 px-4 text-right text-gray-300">{{ item.quantity }}</td>
+                    <td class="py-3 px-4 text-right text-gray-300">{{ "%.2f"|format(item.price) }}</td>
+                    <td class="py-3 px-4 text-right text-gray-300">{{ "%.2f"|format(item.quantity * item.price) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="flex justify-end">
+            <div class="w-full max-w-xs space-y-2">
+                <div class="flex justify-between text-gray-900 dark:text-white">
+                    <span class="font-medium">Subtotal</span>
+                    <span>{{ "%.2f"|format(invoice.total_amount) }}</span>
+                </div>
+                <div class="flex justify-between text-xl font-bold text-gray-900 dark:text-white border-t pt-2 dark:border-gray-600">
+                    <span>Grand Total</span>
+                    <span>{{ "%.2f"|format(invoice.total_amount) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

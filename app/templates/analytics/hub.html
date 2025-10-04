@@ -1,0 +1,46 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Analytics Studio</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Go beyond standard reports. Ask complex questions and get deep insights into your business.</p>
+    </header>
+
+
+
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-10">
+        <!-- Comparison Tool Card -->
+        <a href="/analytics/comparison" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-gray-700">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Comparison Tool</h5>
+            <p class="font-normal text-gray-700 dark:text-gray-400">Visually compare multiple metrics like sales, expenses, and profit across different time periods or branches.</p>
+        </a>
+        
+        <!-- NEW: Financial Health Scorecard Card -->
+        <a href="/analytics/financial-health" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-gray-700">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Financial Health Scorecard</h5>
+            <p class="font-normal text-gray-700 dark:text-gray-400">Get an instant diagnosis of your business's profitability and liquidity using key financial ratios.</p>
+        </a>
+
+         <a href="/analytics/deep-dive" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-gray-700">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Deep Dive Analyzer</h5>
+            <p class="font-normal text-gray-700 dark:text-gray-400">Click into your totals. Visually explore what makes up your revenue and expenses.</p>
+        </a>
+            <a href="/analytics/cash-flow-forecast" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:bg-gray-50 dark:hover:bg-gray-700">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Cash Flow Forecaster</h5>
+            <p class="font-normal text-gray-700 dark:text-gray-400">Project future cash balances and run "what-if" scenarios to plan ahead.</p>
+        </a>
+
+        
+    </div>
+
+
+
+
+
+
+
+</div>
+{% endblock %}

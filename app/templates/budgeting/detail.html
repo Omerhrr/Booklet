@@ -1,0 +1,54 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">{{ budget.name }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Budget for <span class="font-semibold text-blue-500">{{ budget.branch.name }}</span> from {{ budget.start_date.strftime('%b %d, %Y') }} to {{ budget.end_date.strftime('%b %d, %Y') }}
+            </p>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/budgeting/" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:underline">
+                &larr; Back to All Budgets
+            </a>
+            <a href="/budgeting/report/{{ budget.id }}" class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                View vs. Actuals Report
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Revenue Targets -->
+        <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 border-b pb-3 dark:border-gray-700">Revenue Targets</h2>
+            <dl class="space-y-3">
+                {% for line in revenue_lines %}
+                <div class="flex justify-between">
+                    <dt class="text-sm text-gray-600 dark:text-gray-300">{{ line.account.name }}</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ "%.2f"|format(line.amount) }}</dd>
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500">No revenue targets were set for this budget.</p>
+                {% endfor %}
+            </dl>
+        </div>
+        <!-- Expense Limits -->
+        <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 border-b pb-3 dark:border-gray-700">Expense Limits</h2>
+            <dl class="space-y-3">
+                {% for line in expense_lines %}
+                <div class="flex justify-between">
+                    <dt class="text-sm text-gray-600 dark:text-gray-300">{{ line.account.name }}</dt>
+                    <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ "%.2f"|format(line.amount) }}</dd>
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500">No expense limits were set for this budget.</p>
+                {% endfor %}
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}

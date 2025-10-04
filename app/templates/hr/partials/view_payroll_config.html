@@ -1,0 +1,31 @@
+<div id="payroll-config-section" class="p-6 bg-white dark:bg-gray-900/50 rounded-lg shadow-sm">
+    <div class="flex justify-between items-center border-b pb-3 mb-6 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Payroll Configuration</h3>
+        <button hx-get="/hr/employees/{{ employee.id }}/edit-payroll"
+                hx-target="#payroll-config-section"
+                hx-swap="outerHTML"
+                class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</button>
+    </div>
+    {% if employee.payroll_config %}
+    <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+        <div>
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Gross Salary</dt>
+            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ "%.2f"|format(employee.payroll_config.gross_salary) }} ({{ employee.payroll_config.pay_frequency.value }})</dd>
+        </div>
+        <div>
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">PAYE (Tax) Rate</dt>
+            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ "%.2f"|format(employee.payroll_config.paye_rate * 100) if employee.payroll_config.paye_rate is not none else '0.00' }}%</dd>
+        </div>
+        <div>
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pension (Employee Share)</dt>
+            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ "%.2f"|format(employee.payroll_config.pension_employee_rate * 100) if employee.payroll_config.pension_employee_rate is not none else '0.00' }}%</dd>
+        </div>
+        <div>
+            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pension (Employer Share)</dt>
+            <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ "%.2f"|format(employee.payroll_config.pension_employer_rate * 100) if employee.payroll_config.pension_employer_rate is not none else '0.00' }}%</dd>
+        </div>
+    </dl>
+    {% else %}
+    <p class="text-center text-gray-500 dark:text-gray-400">No payroll configuration found for this employee.</p>
+    {% endif %}
+</div>

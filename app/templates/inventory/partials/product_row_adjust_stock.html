@@ -1,0 +1,36 @@
+<tr id="product-row-{{ product.id }}">
+    {# --- THIS IS THE FIX --- #}
+    {# The form is now INSIDE a single TD that spans the whole row #}
+    <td colspan="8"> 
+        <form 
+            hx-post="/inventory/products/{{ product.id }}/adjust-stock" 
+            hx-target="closest tr" 
+            hx-swap="outerHTML"
+            class="grid grid-cols-8 gap-4 items-center"
+        >
+            {# Column 1: Product Name #}
+            <div class="col-span-1 text-sm font-medium">
+                {{ product.name }}
+                <p class="text-xs text-gray-400">Adjusting Stock</p>
+            </div>
+
+            {# Columns 2-6: Inputs #}
+            <div class="col-span-5 grid grid-cols-2 gap-4">
+                <div>
+                    <label for="quantity_change" class="sr-only">Quantity Change</label>
+                    <input type="number" name="quantity_change" id="quantity_change" class="bg-gray-50 border border-gray-300 text-gray-200 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., -10 or 25" required>
+                </div>
+                <div>
+                    <label for="reason" class="sr-only">Reason</label>
+                    <input type="text" name="reason" id="reason" class="bg-gray-50 border border-gray-300 text-gray-200 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" placeholder="Reason for adjustment" required>
+                </div>
+            </div>
+
+            {# Column 7: Buttons #}
+            <div class="col-span-2 flex items-center justify-end space-x-2">
+                <button type="submit" class="font-medium text-green-600 dark:text-green-500 hover:underline">Save</button>
+                <button type="button" hx-get="/inventory/products/{{ product.id }}/row" hx-target="closest tr" hx-swap="outerHTML" class="font-medium text-red-600 dark:text-red-500 hover:underline">Cancel</button>
+            </div>
+        </form>
+    </td>
+</tr>

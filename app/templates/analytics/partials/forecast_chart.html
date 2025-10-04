@@ -1,0 +1,38 @@
+{# Create new file: app/templates/analytics/partials/forecast_chart.html #}
+<div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm" x-data="forecastChart()" x-init="init()">
+    <div id="forecast-chart" style="height: 500px;"></div>
+</div>
+
+<script id="forecast-data" type="application/json">
+    {{ forecast_data | tojson | safe }}
+</script>
+
+<script>
+// This script will be re-evaluated each time this partial is swapped in
+document.addEventListener('alpine:init', () => {
+    if (!window.Alpine.data('forecastChart')) {
+        window.Alpine.data('forecastChart', () => ({
+            init() {
+                const dataEl = document.getElementById('forecast-data');
+                if (!dataEl) return;
+                const data = JSON.parse(dataEl.textContent);
+                const chartDom = document.getElementById('forecast-chart');
+                const myChart = echarts.init(chartDom, 'dark');
+                const option = {
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['Historical', 'Forecast'], textStyle: { color: '#ccc' } },
+                    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                    xAxis: { type: 'category', data: data.labels, axisLine: { lineStyle: { color: '#ccc' } } },
+                    yAxis: { type: 'value', axisLabel: { formatter: '${value}' }, axisLine: { lineStyle: { color: '#ccc' } } },
+                    series: [
+                        { name: 'Historical', type: 'line', data: data.historical, smooth: true, itemStyle: { color: '#9ca3af' } },
+                        { name: 'Forecast', type: 'line', data: data.historical.map(v => v === null ? null : NaN).concat(data.forecast), smooth: true, lineStyle: { type: 'dashed' }, itemStyle: { color: '#3b82f6' } }
+                    ]
+                };
+                myChart.setOption(option);
+                window.addEventListener('resize', () => myChart.resize());
+            }
+        }));
+    }
+});
+</script>

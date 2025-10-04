@@ -1,0 +1,28 @@
+{# This is a table row that contains a form for editing #}
+<tr id="branch-row-{{ branch.id }}" class="bg-gray-50 dark:bg-gray-700">
+    <td class="px-6 py-4">
+        <input type="text" name="branch_name" value="{{ branch.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+    </td>
+    <td class="px-6 py-4">
+        <input type="text" name="branch_currency" value="{{ branch.currency }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+    </td>
+    <td class="px-6 py-4 text-right space-x-2">
+        <button 
+            hx-put="/settings/branches/{{ branch.id }}"
+            hx-include="closest tr"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+            class="font-medium text-green-600 dark:text-green-500 hover:underline">
+            Save
+        </button>
+        
+        {# THE FIX: The target should be the closest 'tr', not the whole 'tbody' #}
+        <button 
+            hx-get="/settings/branches/{{ branch.id }}/row"
+            hx-target="closest tr"
+            hx-swap="outerHTML"
+            class="font-medium text-red-600 dark:text-red-500 hover:underline">
+            Cancel
+        </button>
+    </td>
+</tr>

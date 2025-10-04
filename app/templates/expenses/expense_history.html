@@ -1,0 +1,80 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div 
+    class="py-10 px-4 sm:px-6 lg:px-8"
+    x-data="{ searchQuery: '' }"
+>
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Expense History</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A record of all business expenses.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <input 
+                type="text" 
+                id="search" 
+                x-model.debounce.300ms="searchQuery"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                placeholder="Search expenses..."
+            >
+            {% if 'expenses:create' in user_perms %}
+            <a href="/expenses/new" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center whitespace-nowrap">
+                Record New Expense
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expense #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendor</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="relative px-6 py-3"><span class="sr-only">Actions</span></th>
+                    
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% if expenses_data %}
+                        {% for expense in expenses_data %}
+                            <tr x-show="searchQuery === '' || '{{ expense.category | lower }}'.includes(searchQuery.toLowerCase()) || '{{ expense.description | lower }}'.includes(searchQuery.toLowerCase()) || ('{{ expense.vendor.name | lower if expense.vendor else '' }}'.includes(searchQuery.toLowerCase()))">
+                                <td class="px-6 py-4 text-sm text-gray-300">{{ expense.expense_date.split('T')[0] }}</td>
+                                <td class="px-6 py-4 text-sm font-medium text-gray-400">{{ expense.expense_number }}</td>
+                
+                                <td class="px-6 py-4 text-sm text-gray-300">{{ expense.category }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-300">{{ expense.description }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-300">{{ expense.branch.name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-300">{{ expense.vendor.name if expense.vendor else 'N/A' }}</td>
+                                <td class="px-6 py-4 text-sm text-right text-gray-300">{{ "%.2f"|format(expense.amount) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    {% if 'expenses:delete' in user_perms %}
+                                    <button
+                                        hx-delete="/expenses/history/{{ expense.id }}"
+                                        hx-target="closest tr"
+                                        hx-swap="outerHTML swap:1s"
+                                        hx-confirm="Are you sure you want to delete this expense? This will create a reversing transaction in the ledger."
+                                        class="text-red-500 hover:text-red-700"
+                                    >
+                                        Delete
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="6" class="text-center py-10 text-gray-500">No expenses recorded yet.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+
+<div x-data="ledgerComponent()" x-init="init()">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Net Pay Received</h3>
+            <p class="mt-1 text-2xl font-bold text-green-600 dark:text-green-500">{{ "%.2f"|format(ledger_summary.total_net_pay) }}</p>
+        </div>
+        <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total PAYE (Tax) Paid</h3>
+            <p class="mt-1 text-2xl font-bold text-orange-600 dark:text-orange-500">{{ "%.2f"|format(ledger_summary.total_paye) }}</p>
+        </div>
+        <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Pension Contributed</h3>
+            <p class="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-500">{{ "%.2f"|format(ledger_summary.total_pension) }}</p>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-4">
+        <input 
+            type="text" 
+            x-model.debounce.300ms="ledgerSearch"
+            placeholder="Search by account or description..."
+            class="block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+        >
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Debit</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    <template x-for="entry in filteredEntries" :key="entry.id">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300" x-text="new Date(entry.transaction_date).toLocaleDateString()"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white" x-text="entry.account.name"></td>
+                            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" x-text="entry.description"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-green-500" x-text="entry.debit > 0 ? entry.debit.toFixed(2) : ''"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-red-500" x-text="entry.credit > 0 ? entry.credit.toFixed(2) : ''"></td>
+                        </tr>
+                    </template>
+                    <template x-if="allEntries.length === 0">
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                                No ledger entries found for this employee's payroll.
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script id="employee-ledger-data" type="application/json">
+    {{ ledger_entries_json | tojson | safe }}
+</script>
+
+<script>
+    function ledgerComponent() {
+        return {
+            ledgerSearch: '',
+            allEntries: [],
+            
+            init() {
+                const dataEl = document.getElementById('employee-ledger-data');
+                this.allEntries = JSON.parse(dataEl.textContent);
+            },
+
+            get filteredEntries() {
+                if (this.ledgerSearch === '') {
+                    return this.allEntries;
+                }
+                return this.allEntries.filter(entry => {
+                    const search = this.ledgerSearch.toLowerCase();
+                    return entry.account.name.toLowerCase().includes(search) ||
+                           entry.description.toLowerCase().includes(search);
+                });
+            }
+        }
+    }
+    // We register the component with Alpine
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('ledgerComponent', ledgerComponent);
+    });
+</script>

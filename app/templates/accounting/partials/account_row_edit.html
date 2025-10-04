@@ -1,0 +1,17 @@
+<tr id="account-row-{{ account.id }}">
+    <td class="px-6 py-4">
+        <input type="text" name="name" value="{{ account.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+    </td>
+    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ account.type.value }}</td>
+    <td class="px-6 py-4 text-center">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">No</span>
+    </td>
+    <td class="px-6 py-4 text-right text-sm font-medium space-x-4">
+        <button hx-put="/accounting/chart-of-accounts/{{ account.id }}" hx-include="closest tr" hx-target="closest tr" hx-swap="outerHTML" class="text-green-600 hover:text-green-900 dark:text-green-400">
+            Save
+        </button>
+        <button hx-get="/accounting/chart-of-accounts" hx-target="body" hx-swap="innerHTML" class="text-gray-500 hover:text-gray-700 dark:text-gray-400">
+            Cancel
+        </button>
+    </td>
+</tr>

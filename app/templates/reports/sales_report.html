@@ -1,0 +1,104 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="print:hidden">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Sales Report</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Analyze sales performance by date, customer, and branch.</p>
+    </div>
+
+    <form id="report-filters" hx-get="/reports/sales" hx-target="body" hx-swap="innerHTML" hx-push-url="true" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm my-8 print:hidden">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+            <div>
+                <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date</label>
+                <input type="date" name="start_date" id="start_date" value="{{ filters.start_date.strftime('%Y-%m-%d') if filters.start_date else '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date</label>
+                <input type="date" name="end_date" id="end_date" value="{{ filters.end_date.strftime('%Y-%m-%d') if filters.end_date else '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Customer</label>
+                <select name="customer_id" id="customer_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    <option value="">All Customers</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}" {% if filters.customer_id == customer.id %}selected{% endif %}>{{ customer.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="branch_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Branch</label>
+                <select name="branch_id" id="branch_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    {% if user.is_superuser %}
+                    <option value="0" {% if filters.branch_id == 0 %}selected{% endif %}>All Branches (Consolidated)</option>
+                    {% endif %}
+                    {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if filters.branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Generate</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sales Summary</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Total in Period: <span class="font-bold text-green-500">{{ "%.2f"|format(total_sales) }}</span></p>
+            </div>
+            <div class="flex gap-2 print:hidden">
+                <button onclick="window.print()" class="text-gray-600 bg-gray-200 hover:bg-gray-300 font-medium rounded-lg text-sm px-4 py-2">Print</button>
+                <a href="#" id="export-btn" class="text-white bg-green-700 hover:bg-green-800 font-medium rounded-lg text-sm px-4 py-2">Export to Excel</a>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Branch</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ invoice.invoice_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-blue-400 hover:underline"><a href="/sales/{{ invoice.id }}">{{ invoice.invoice_number }}</a></td>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ invoice.customer.name }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ invoice.branch.name }}</td>
+                        <td class="px-6 py-4 text-sm text-right text-gray-300">{{ "%.2f"|format(invoice.total_amount) }}</td>
+                        <td class="px-6 py-4 text-sm text-center">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if invoice.status == 'Paid' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                {% elif invoice.status == 'Partially Paid' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                {% else %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 {% endif %}">
+                                {{ invoice.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center py-10 text-gray-500">No sales found for the selected criteria.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('export-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        const form = document.getElementById('report-filters');
+        const params = new URLSearchParams(new FormData(form));
+        this.href = `/reports/export/sales?${params.toString()}`;
+        window.location.href = this.href;
+    });
+</script>
+{% endblock %}

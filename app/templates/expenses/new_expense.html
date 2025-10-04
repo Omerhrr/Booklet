@@ -1,0 +1,92 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto" 
+         x-data="expenseForm({{ user.business.is_vat_registered | tojson }})">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Record New Expense</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Log a business expense not related to inventory purchases.</p>
+            </div>
+            <div>
+                <a href="/expenses/history" class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">
+                    View History &rarr;
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+           <form action="/expenses/new" method="post" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label for="expense_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Expense Date</label>
+                        <input type="date" name="expense_date" id="expense_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label for="sub_total" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Amount (before VAT)</label>
+                        <input type="number" step="0.01" name="sub_total" x-model.number="subTotal" @input="updateTotal" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div x-show="isVatRegistered">
+                        <label for="vat_amount" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">VAT Amount</label>
+                        <input type="number" step="0.01" name="vat_amount" x-model.number="vatAmount" @input="updateTotal" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="expense_account_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Expense Category</label>
+                        <select name="expense_account_id" id="expense_account_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                            <option value="" disabled selected>-- Select Category --</option>
+                            {% for acc in expense_accounts %}<option value="{{ acc.id }}">{{ acc.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="paid_from_account_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Paid From Account</label>
+                        <select name="paid_from_account_id" id="paid_from_account_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                            {% for acc in payment_accounts %}<option value="{{ acc.id }}">{{ acc.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="branch_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Branch</label>
+                        <select name="branch_id" id="branch_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                            {% for branch in branches %}<option value="{{ branch.id }}">{{ branch.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="vendor_id_str" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Vendor (Optional)</label>
+                        <select name="vendor_id_str" id="vendor_id_str" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                            <option value="" selected>-- None --</option>
+                            {% for vendor in vendors %}<option value="{{ vendor.id }}">{{ vendor.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="md:col-span-full">
+                    <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
+                    <input type="text" name="description" id="description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required placeholder="e.g., Monthly office rent for September">
+                </div>
+                <div class="mt-6 flex justify-end items-center gap-6">
+                    <div class="text-right">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Total Expense</span>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white" x-text="formatCurrency(totalAmount)"></p>
+                    </div>
+                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('expense_date').value = new Date().toISOString().split('T')[0];
+    function expenseForm(isVat) {
+        return {
+            isVatRegistered: isVat,
+            subTotal: 0.0,
+            vatAmount: 0.0,
+            totalAmount: 0.0,
+            updateTotal() {
+                this.totalAmount = (this.subTotal || 0) + (this.vatAmount || 0);
+            },
+            formatCurrency(value) {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: '{{ user.selected_branch.currency }}' }).format(value || 0);
+            }
+        }
+    }
+</script>
+{% endblock %}

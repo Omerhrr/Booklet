@@ -1,0 +1,64 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Stock Adjustment History</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">An audit log of all manual inventory changes.</p>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Change</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for adj in adjustments %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                            {{ adj.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
+                            <a href="/inventory/products/{{ adj.product.id }}/view" class="hover:underline">
+                                {{ adj.product.name if adj.product else 'N/A' }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                            {{ adj.user.username if adj.user else 'System' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold">
+                            {% if adj.quantity_change > 0 %}
+                                <span class="text-green-600 dark:text-green-500">+{{ adj.quantity_change }}</span>
+                            {% else %}
+                                <span class="text-red-600 dark:text-red-500">{{ adj.quantity_change }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
+                            {{ adj.reason }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-10 text-sm text-gray-500 dark:text-gray-400">
+                            No manual stock adjustments have been recorded yet.
+                        </td>
+                    </tr>
+                    
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

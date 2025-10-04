@@ -1,0 +1,92 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="print:hidden">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Balance Sheet</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A snapshot of your company's financial position on a specific date.</p>
+    </div>
+
+    <!-- Filter Form -->
+    <form hx-get="/accounting/balance-sheet" hx-target="body" hx-swap="innerHTML" hx-push-url="true" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm my-8 print:hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            <div class="md:col-span-1">
+                <label for="as_of_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">As of Date</label>
+                <input type="date" name="as_of_date" id="as_of_date" value="{{ as_of_date.strftime('%Y-%m-%d') if as_of_date else '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div class="md:col-span-1">
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Generate Report</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Balance Sheet Report -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 max-w-5xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ user.business.name }}</h2>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300">Balance Sheet</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">As of {{ as_of_date.strftime('%B %d, %Y') }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12">
+            <!-- Left Side: Assets -->
+            <div class="space-y-6">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2 mb-2">Assets</h4>
+                <dl class="space-y-1">
+                    {% for name, amount in report_data.assets.items() %}
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-600 dark:text-gray-300 pl-4">{{ name }}</dt>
+                        <dd class="text-gray-800 dark:text-gray-200">{{ "%.2f"|format(amount) }}</dd>
+                    </div>
+                    {% endfor %}
+                    <div class="flex justify-between font-bold pt-2 border-t-2 mt-2">
+                        <dt class="text-gray-800 dark:text-gray-100">Total Assets</dt>
+                        <dd class="text-gray-800 dark:text-gray-100">{{ "%.2f"|format(report_data.total_assets) }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <!-- Right Side: Liabilities & Equity -->
+            <div class="space-y-6 mt-8 md:mt-0">
+                <!-- Liabilities -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2 mb-2">Liabilities</h4>
+                    <dl class="space-y-1">
+                        {% for name, amount in report_data.liabilities.items() %}
+                        <div class="flex justify-between text-sm">
+                            <dt class="text-gray-600 dark:text-gray-300 pl-4">{{ name }}</dt>
+                            <dd class="text-gray-800 dark:text-gray-200">{{ "%.2f"|format(amount) }}</dd>
+                        </div>
+                        {% endfor %}
+                        <div class="flex justify-between font-bold pt-2 border-t">
+                            <dt class="text-gray-800 dark:text-gray-100">Total Liabilities</dt>
+                            <dd class="text-gray-800 dark:text-gray-100">{{ "%.2f"|format(report_data.total_liabilities) }}</dd>
+                        </div>
+                    </dl>
+                </div>
+                <!-- Equity -->
+                <div class="mt-6">
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2 mb-2">Equity</h4>
+                    <dl class="space-y-1">
+                        {% for name, amount in report_data.equity.items() %}
+                        <div class="flex justify-between text-sm">
+                            <dt class="text-gray-600 dark:text-gray-300 pl-4">{{ name }}</dt>
+                            <dd class="text-gray-800 dark:text-gray-200">{{ "%.2f"|format(amount) }}</dd>
+                        </div>
+                        {% endfor %}
+                        <div class="flex justify-between font-bold pt-2 border-t">
+                            <dt class="text-gray-800 dark:text-gray-100">Total Equity</dt>
+                            <dd class="text-gray-800 dark:text-gray-100">{{ "%.2f"|format(report_data.total_equity) }}</dd>
+                        </div>
+                    </dl>
+                </div>
+                <!-- Total Liabilities & Equity -->
+                <div class="flex justify-between font-bold pt-2 border-t-2 mt-4">
+                    <dt class="text-gray-800 dark:text-gray-100">Total Liabilities & Equity</dt>
+                    <dd class="text-gray-800 dark:text-gray-100">{{ "%.2f"|format(report_data.total_liabilities_and_equity) }}</dd>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+
+<li class="p-4 flex justify-between items-center">
+    <div>
+        <p class="text-md font-semibold text-gray-900 dark:text-white">{{ branch.name }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Currency: {{ branch.currency }}</p>
+    </div>
+    <div>
+        {% if branch.is_default %}
+            <span class="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">Default</span>
+        {% endif %}
+
+    </div>
+</li>

@@ -1,0 +1,42 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">{{ product.name }}</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">SKU: {{ product.sku or 'N/A' }}</p>
+            </div>
+            <div>
+                <a href="/inventory/products" class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">&larr; Back to All Products</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="product-tabs" data-tabs-toggle="#product-tab-content" role="tablist">
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="overview-tab" data-tabs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Overview</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="stock-tab" data-tabs-target="#stock" type="button" role="tab" aria-controls="stock" aria-selected="false">Stock Movements</button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="product-tab-content">
+        <!-- Overview Tab -->
+        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+            {% include "inventory/partials/product_detail_overview.html" %}
+        </div>
+        <!-- Stock Movements Tab -->
+        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="stock" role="tabpanel" aria-labelledby="stock-tab">
+            {% include "inventory/partials/product_detail_stock.html" %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<main class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Manage Branches</h1>
+                <p class="text-gray-500 dark:text-gray-400">Add or edit your business branches.</p>
+            </div>
+        </div>
+
+        <!-- Branches List -->
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg mb-8">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Branch Name</th>
+                        <th scope="col" class="px-6 py-3">Currency</th>
+                        <th scope="col" class="px-6 py-3"><span class="sr-only">Edit</span></th>
+                    </tr>
+                </thead>
+                <tbody hx-target="this" hx-swap="beforeend">
+                    {% for branch in branches %}
+                        {% include "settings/partials/branch_row.html" %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if can_add_branch %}
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Add New Branch</h2>
+            <form 
+                    hx-post="/settings/branches" 
+                    hx-target="tbody" {# This targets the table body #}
+                    hx-swap="beforeend" {# This appends the new row #}
+                    hx-on::after-request="this.reset()" {# This resets the form fields #}
+                    class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end"
+                >
+                <div>
+                    <label for="branch_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Branch Name</label>
+                    <input type="text" id="branch_name" name="branch_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" placeholder="e.g., Lagos Office" required>
+                </div>
+                <div>
+                    <label for="branch_currency" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Currency</label>
+                    <input type="text" id="branch_currency" name="branch_currency" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" placeholder="e.g., NGN" required>
+                </div>
+                <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Add Branch</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+            <span class="font-medium">Plan Limit Reached:</span> Your current plan does not permit adding more branches. Please upgrade your plan to add more.
+        </div>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

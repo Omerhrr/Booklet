@@ -1,0 +1,37 @@
+{# In: app/templates/settings/ai_settings.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<main class="p-4 md:p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">AI Settings</h1>
+            <p class="text-gray-500 dark:text-gray-400">Configure the API key for Jarvis, your AI Analyst.</p>
+        </div>
+
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+            <form action="/settings/ai" method="post" class="space-y-6">
+                <div>
+                    <label for="ai_provider" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">AI Provider</label>
+                    <select name="ai_provider" id="ai_provider" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                        {# THE FIX: Add Z.ai as an option #}
+                        <option value="gemini" {% if business.ai_provider == 'gemini' %}selected{% endif %}>Google Gemini</option>
+                        <option value="zai" {% if business.ai_provider == 'zai' %}selected{% endif %}>Z.ai</option>
+                        <option value="openai" disabled>OpenAI (Coming Soon)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="api_key" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">API Key</label>
+                    <input type="password" name="api_key" id="api_key" value="{{ decrypted_key }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Your key is stored encrypted. It is only shown here for your convenience. Re-enter to update.</p>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

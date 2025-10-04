@@ -1,0 +1,27 @@
+
+/* app/static/css/styles.css */
+@media print {
+    /* Hide everything except the main report content */
+    body > div > aside, 
+    body > div > div > header,
+    .print\:hidden {
+        display: none !important;
+    }
+
+    /* Ensure the report content takes up the full width */
+    body > div > div {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Remove shadows and backgrounds for cleaner printing */
+    .print\:no-shadow {
+        box-shadow: none !important;
+    }
+    
+    @page {
+        size: A4 landscape;
+        margin: 1cm;
+    }
+}
+

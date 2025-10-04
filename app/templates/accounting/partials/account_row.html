@@ -1,0 +1,25 @@
+<tr id="account-row-{{ account.id }}">
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ account.name }}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ account.type.value }}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+        {% if account.is_system_account %}
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">Yes</span>
+        {% else %}
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">No</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+        {% if not account.is_system_account %}
+            {% if 'accounting:edit' in user_perms %}
+            <button hx-get="/accounting/chart-of-accounts/{{ account.id }}/edit" hx-target="#account-row-{{ account.id }}" hx-swap="outerHTML" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">
+                Edit
+            </button>
+            {% endif %}
+            {% if 'accounting:delete' in user_perms %}
+            <button hx-delete="/accounting/chart-of-accounts/{{ account.id }}" hx-target="closest tr" hx-swap="outerHTML swap:1s" hx-confirm="Are you sure? Deleting an account is permanent and only possible if it has no transactions." class="text-red-600 hover:text-red-900 dark:text-red-400">
+                Delete
+            </button>
+            {% endif %}
+        {% endif %}
+    </td>
+</tr>

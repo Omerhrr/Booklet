@@ -1,0 +1,26 @@
+{# This is a self-contained form that can be swapped in by HTMX #}
+<form 
+    id="add-account-form"
+    hx-post="/accounting/chart-of-accounts"
+    {# 1. Target the correct table body based on the selected type #}
+    hx-target-oob="#account-table-{{ '{{' }} document.querySelector('#add-account-form select[name=type]').value {{ '}}' }}:beforeend"
+    {# 2. Target this form itself to reset it after submission #}
+    hx-swap-oob="outerHTML"
+    {# 3. Use HTMX events to close the modal #}
+    hx-on::after-request="if(event.detail.successful) { modal.hide(); }"
+>
+    <div class="grid gap-4 mb-4 sm:grid-cols-1">
+        <div>
+            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Account Name</label>
+            <input type="text" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+        </div>
+        <div>
+            <label for="type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Account Type</label>
+            <select name="type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                <option value="" disabled selected>-- Select Type --</option>
+                {% for type in account_types %}<option value="{{ type }}">{{ type }}</option>{% endfor %}
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Add Account</button>
+</form>

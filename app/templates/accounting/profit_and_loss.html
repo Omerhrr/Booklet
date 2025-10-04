@@ -1,0 +1,92 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="print:hidden">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Profit & Loss Statement</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Analyze your business's profitability over a specific period.</p>
+    </div>
+
+    <!-- Filter Form -->
+    <form hx-get="/accounting/profit-and-loss" hx-target="body" hx-swap="innerHTML" hx-push-url="true" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm my-8 print:hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            <div>
+                <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date</label>
+                <input type="date" name="start_date" id="start_date" value="{{ filters.start_date.strftime('%Y-%m-%d') if filters.start_date else '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date</label>
+                <input type="date" name="end_date" id="end_date" value="{{ filters.end_date.strftime('%Y-%m-%d') if filters.end_date else '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Generate Report</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- P&L Report -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ user.business.name }}</h2>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300">Profit and Loss Statement</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">For the period {{ filters.start_date.strftime('%B %d, %Y') }} to {{ filters.end_date.strftime('%B %d, %Y') }}</p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Revenue Section -->
+            <div>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2 mb-2">Revenue</h4>
+                <dl class="space-y-1">
+                    {% for name, amount in report_data.revenue_totals.items() %}
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-600 dark:text-gray-300 pl-4">{{ name }}</dt>
+                        <dd class="text-gray-800 dark:text-gray-200">{{ "%.2f"|format(amount) }}</dd>
+                    </div>
+                    {% endfor %}
+                    <div class="flex justify-between font-bold pt-2 border-t">
+                        <dt class="text-gray-800 dark:text-gray-100">Total Revenue</dt>
+                        <dd class="text-gray-800 dark:text-gray-100">{{ "%.2f"|format(report_data.total_revenue) }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <!-- COGS & Gross Profit -->
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <dt class="text-gray-600 dark:text-gray-300">Cost of Goods Sold</dt>
+                    <dd class="text-gray-800 dark:text-gray-200">({{ "%.2f"|format(report_data.cogs) }})</dd>
+                </div>
+                <div class="flex justify-between font-bold text-lg pt-2 border-t-2">
+                    <dt class="text-gray-800 dark:text-gray-100">Gross Profit</dt>
+                    <dd class="text-gray-800 dark:text-gray-100">{{ "%.2f"|format(report_data.gross_profit) }}</dd>
+                </div>
+            </div>
+
+            <!-- Operating Expenses -->
+            <div>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2 mb-2">Operating Expenses</h4>
+                <dl class="space-y-1">
+                    {% for name, amount in report_data.operating_expenses.items() %}
+                    <div class="flex justify-between text-sm">
+                        <dt class="text-gray-600 dark:text-gray-300 pl-4">{{ name }}</dt>
+                        <dd class="text-gray-800 dark:text-gray-200">({{ "%.2f"|format(amount) }})</dd>
+                    </div>
+                    {% endfor %}
+                    <div class="flex justify-between font-bold pt-2 border-t">
+                        <dt class="text-gray-800 dark:text-gray-100">Total Operating Expenses</dt>
+                        <dd class="text-gray-800 dark:text-gray-100">({{ "%.2f"|format(report_data.total_operating_expenses) }})</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <!-- Net Profit -->
+            <div class="flex justify-between font-bold text-xl pt-4 border-t-4 border-double">
+                <dt class="text-gray-900 dark:text-white">Net Profit / (Loss)</dt>
+                <dd class="{% if report_data.net_profit >= 0 %}text-green-600 dark:text-green-500{% else %}text-red-600 dark:text-red-500{% endif %}">
+                    {{ "%.2f"|format(report_data.net_profit) }}
+                </dd>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

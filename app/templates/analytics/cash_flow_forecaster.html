@@ -1,0 +1,98 @@
+{# Create new file: app/templates/analytics/cash_flow_forecaster.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8" 
+     x-data="cashFlowForecaster()" 
+     x-init="init()">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Cash Flow Forecaster</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Project future cash balances and run 'what-if' scenarios.</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Scenario Builder -->
+        <div class="lg:col-span-1">
+            <form id="scenario-form"
+                  hx-post="/analytics/cash-flow-forecast/update"
+                  hx-target="#chart-container"
+                  hx-swap="innerHTML"
+                  hx-trigger="change delay:500ms"
+                  class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm space-y-6 sticky top-24">
+                
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">What-If Scenarios</h3>
+                <input type="hidden" name="scenarios_json" :value="JSON.stringify(scenarios)">
+
+                <!-- Scenarios List -->
+                <div class="space-y-4">
+                    <template x-for="(scenario, index) in scenarios" :key="index">
+                        <div class="p-3 border rounded-lg dark:border-gray-600 flex items-center gap-3">
+                            <div class="flex-grow">
+                                <p class="text-sm font-medium text-gray-800 dark:text-gray-200" x-text="scenario.description"></p>
+                                <p class="text-sm" :class="scenario.type === 'income' ? 'text-green-500' : 'text-red-500'">
+                                    <span x-text="scenario.type === 'income' ? '+' : '-'"></span>
+                                    <span x-text="formatCurrency(scenario.amount)"></span> / month
+                                </p>
+                            </div>
+                            <button type="button" @click="removeScenario(index)" class="text-gray-400 hover:text-red-500">&times;</button>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Add New Scenario -->
+                <div class="pt-4 border-t dark:border-gray-700">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-1 text-xs text-gray-500">Description</label>
+                            <input type="text" x-model="newScenario.description" placeholder="e.g., New Office Rent" class="bg-gray-50 border-gray-300 text-sm rounded-lg w-full p-2 dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-xs text-gray-500">Monthly Amount</label>
+                            <input type="number" x-model.number="newScenario.amount" class="bg-gray-50 border-gray-300 text-sm rounded-lg w-full p-2 dark:bg-gray-700">
+                        </div>
+                    </div>
+                    <div class="mt-3 flex justify-between">
+                        <button type="button" @click="addScenario('expense')" class="text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg text-xs px-4 py-2">- Add Expense</button>
+                        <button type="button" @click="addScenario('income')" class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-xs px-4 py-2">+ Add Income</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Chart Display -->
+        <div id="chart-container" class="lg:col-span-2">
+            {% include "analytics/partials/forecast_chart.html" %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('cashFlowForecaster', () => ({
+        scenarios: [],
+        newScenario: { description: '', amount: null },
+        init() {
+            // Logic to trigger HTMX on change is handled in the form itself
+        },
+        addScenario(type) {
+            if (!this.newScenario.description || !this.newScenario.amount) {
+                alert('Please enter both a description and an amount.');
+                return;
+            }
+            this.scenarios.push({ ...this.newScenario, type: type });
+            this.newScenario = { description: '', amount: null };
+            // Manually trigger the HTMX request after adding
+            htmx.trigger('#scenario-form', 'change');
+        },
+        removeScenario(index) {
+            this.scenarios.splice(index, 1);
+            // Manually trigger the HTMX request after removing
+            htmx.trigger('#scenario-form', 'change');
+        },
+        formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: '{{ user.selected_branch.currency }}' }).format(value || 0);
+        }
+    }));
+});
+</script>
+{% endblock %}

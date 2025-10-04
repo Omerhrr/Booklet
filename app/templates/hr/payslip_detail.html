@@ -1,0 +1,117 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <!-- Header with Actions -->
+    <div class="flex items-center justify-between mb-6 print:hidden">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Payslip Details</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">For pay period {{ payslip.pay_period_start.strftime('%b %d, %Y') }} to {{ payslip.pay_period_end.strftime('%b %d, %Y') }}.</p>
+        </div>
+        <div>
+            <a href="/hr/payslips" class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">&larr; Back to History</a>
+            <button onclick="window.print()" class="ml-4 text-white bg-gray-700 hover:bg-gray-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Print</button>
+        </div>
+    </div>
+
+    <!-- Main Payslip Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 max-w-4xl mx-auto">
+        <!-- Company and Employee Header -->
+        <div class="flex justify-between items-start pb-6 border-b dark:border-gray-700">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ user.business.name }}</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ payslip.employee.branch.name }} Branch</p>
+            </div>
+            <div class="text-right">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">PAYSLIP</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Pay Date: {{ payslip.pay_date.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-8 py-6">
+            <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Employee</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ payslip.employee.full_name }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300">{{ payslip.employee.email }}</p>
+            </div>
+        </div>
+
+        <!-- Earnings and Deductions Table -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Earnings -->
+            <div>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Earnings</h4>
+                <table class="min-w-full">
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tr>
+                            <td class="py-2 text-sm text-gray-600 dark:text-gray-300">Gross Salary</td>
+                            <td class="py-2 text-sm text-right text-gray-900 dark:text-white">{{ "%.2f"|format(payslip.gross_pay) }}</td>
+                        </tr>
+                        {# THE FIX: Loop through and display additions #}
+                        {% for addition in payslip.additions %}
+                        <tr>
+                            <td class="py-2 text-sm text-gray-600 dark:text-gray-300">{{ addition.description }}</td>
+                            <td class="py-2 text-sm text-right text-gray-900 dark:text-white">{{ "%.2f"|format(addition.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="border-t-2 border-gray-300 dark:border-gray-600">
+                        <tr>
+                            <td class="py-2 font-bold text-gray-900 dark:text-white">Total Earnings</td>
+                            {# THE FIX: Calculate total earnings correctly #}
+                            <td class="py-2 text-right font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(payslip.gross_pay + total_additions) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <!-- Deductions -->
+            <div>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Deductions</h4>
+                <table class="min-w-full">
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% if payslip.paye_deduction > 0 %}
+                        <tr>
+                            <td class="py-2 text-sm text-gray-600 dark:text-gray-300">PAYE (Tax)</td>
+                            <td class="py-2 text-sm text-right text-gray-900 dark:text-white">{{ "%.2f"|format(payslip.paye_deduction) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if payslip.pension_employee_deduction > 0 %}
+                        <tr>
+                            <td class="py-2 text-sm text-gray-600 dark:text-gray-300">Pension Contribution</td>
+                            <td class="py-2 text-sm text-right text-gray-900 dark:text-white">{{ "%.2f"|format(payslip.pension_employee_deduction) }}</td>
+                        </tr>
+                        {% endif %}
+                        {# THE FIX: Loop through and display other deductions #}
+                        {% for deduction in payslip.deductions %}
+                        <tr>
+                            <td class="py-2 text-sm text-gray-600 dark:text-gray-300">{{ deduction.description }}</td>
+                            <td class="py-2 text-sm text-right text-gray-900 dark:text-white">{{ "%.2f"|format(deduction.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="border-t-2 border-gray-300 dark:border-gray-600">
+                        <tr>
+                            <td class="py-2 font-bold text-gray-900 dark:text-white">Total Deductions</td>
+                            <td class="py-2 text-right font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(payslip.total_deductions) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="mt-8 pt-6 border-t dark:border-gray-700">
+            <div class="grid grid-cols-2">
+                <div>
+                    <h4 class="text-md font-semibold text-gray-900 dark:text-white">Employer Contributions</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Pension (Employer): {{ "%.2f"|format(payslip.pension_employer_contribution) }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-medium text-gray-500 dark:text-gray-400">Net Pay</p>
+                    <p class="text-3xl font-bold text-green-600 dark:text-green-500">{{ "%.2f"|format(payslip.net_pay) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

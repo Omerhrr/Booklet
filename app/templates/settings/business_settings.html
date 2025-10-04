@@ -1,0 +1,45 @@
+{# Create new file: app/templates/settings/business_settings.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<main class="p-4 md:p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Business Settings</h1>
+            <p class="text-gray-500 dark:text-gray-400">Manage your main business information and tax settings.</p>
+        </div>
+
+        <div class="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
+             x-data="{ vatRegistered: {{ 'true' if business.is_vat_registered else 'false' }} }">
+            <form action="/settings/business" method="post" class="space-y-6">
+                <div>
+                    <label for="business_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Business Name</label>
+                    <input type="text" name="business_name" id="business_name" value="{{ business.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                
+                <hr class="dark:border-gray-600">
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">VAT Settings</h3>
+                    <div class="flex items-center mt-4">
+                        <input id="is_vat_registered" name="is_vat_registered" type="checkbox" value="True" x-model="vatRegistered" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600">
+                        <label for="is_vat_registered" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">This business is registered for VAT.</label>
+                    </div>
+                </div>
+
+                <div x-show="vatRegistered" x-transition>
+                    <label for="vat_rate_percent" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Standard VAT Rate (%)</label>
+                    <input type="number" step="0.01" name="vat_rate_percent" id="vat_rate_percent" value="{{ (business.vat_rate * 100) if business.vat_rate else '0.0' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., 7.5">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter the rate as a percentage, like 7.5 for 7.5%.</p>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

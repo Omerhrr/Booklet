@@ -1,0 +1,26 @@
+
+<div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 h-full flex flex-col">
+    <div class="flex items-center space-x-4">
+        <div class="flex-shrink-0">
+            <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700">
+                <span class="text-xl font-medium text-gray-600 dark:text-gray-300">{{ team_user.username[0]|upper }}</span>
+            </span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="text-lg font-medium text-gray-900 truncate dark:text-white">{{ team_user.username }} {% if team_user.is_superuser %}<span class="text-xs text-blue-500">(Admin)</span>{% endif %}</p>
+            <p class="text-sm text-gray-500 truncate dark:text-gray-400">{{ team_user.email }}</p>
+        </div>
+    </div>
+    <div class="mt-4 flex-grow">
+        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned Roles</h4>
+        <ul class="mt-2 space-y-2">
+            {% for assignment in team_user.branch_roles %}
+                <li class="text-sm text-gray-700 dark:text-gray-300">
+                    <span class="font-semibold">{{ assignment.role.name }}</span> at <span class="font-semibold">{{ assignment.branch.name }}</span>
+                </li>
+            {% else %}
+                <li class="text-sm text-gray-500 dark:text-gray-400">No branch roles assigned.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>

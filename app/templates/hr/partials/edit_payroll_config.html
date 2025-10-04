@@ -1,0 +1,43 @@
+<form id="payroll-config-section"
+      hx-put="/hr/employees/{{ employee.id }}/edit-payroll"
+      hx-target="this"
+      hx-swap="outerHTML"
+      class="p-6 bg-white dark:bg-gray-900/50 rounded-lg shadow-sm">
+    <div class="flex justify-between items-center border-b pb-3 mb-6 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Editing Payroll Configuration</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label for="gross_salary" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Gross Salary</label>
+            <input type="number" step="0.01" name="gross_salary" value="{{ '%.2f'|format(employee.payroll_config.gross_salary) }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+        </div>
+        <div>
+            <label for="pay_frequency" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pay Frequency</label>
+            <select name="pay_frequency" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                {% for freq in pay_frequencies %}
+                <option value="{{ freq }}" {% if freq == employee.payroll_config.pay_frequency.value %}selected{% endif %}>{{ freq }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="paye_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PAYE Rate (%)</label>
+            <input type="number" step="0.01" name="paye_rate" value="{{ (employee.payroll_config.paye_rate * 100) if employee.payroll_config.paye_rate is not none else '' }}" placeholder="e.g., 20" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+        </div>
+        <div>
+            <label for="pension_employee_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pension (Employee %)</label>
+            <input type="number" step="0.01" name="pension_employee_rate" value="{{ (employee.payroll_config.pension_employee_rate * 100) if employee.payroll_config.pension_employee_rate is not none else '' }}" placeholder="e.g., 8" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+        </div>
+        <div class="md:col-span-2">
+            <label for="pension_employer_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pension (Employer %)</label>
+            <input type="number" step="0.01" name="pension_employer_rate" value="{{ (employee.payroll_config.pension_employer_rate * 100) if employee.payroll_config.pension_employer_rate is not none else '' }}" placeholder="e.g., 10" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+        </div>
+    </div>
+    <div class="mt-6 flex items-center gap-4">
+        <button type="submit" class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save Changes</button>
+        <button type="button"
+                hx-get="/hr/employees/{{ employee.id }}/edit-payroll"
+                hx-target="#payroll-config-section"
+                hx-swap="outerHTML"
+                class="text-sm font-medium text-red-600 dark:text-red-500 hover:underline">Cancel</button>
+    </div>
+</form>

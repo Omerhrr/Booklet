@@ -1,0 +1,91 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block head %}
+    {{ super() }}
+    <style>[x-cloak] { display: none !important; }</style>
+{% endblock %}
+
+{% block content %}
+<div 
+    class="py-10 px-4 sm:px-6 lg:px-8"
+    x-data="{ searchQuery: '' }"
+>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Purchase History</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A record of all purchase bills.</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Search Input Field -->
+            <input 
+                type="text" 
+                name="search" 
+                id="search" 
+                x-model.debounce.300ms="searchQuery"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                placeholder="Search by Bill # or Vendor..."
+            >
+            <a href="/purchases/new-bill" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center whitespace-nowrap">
+                Create New Bill
+            </a>
+        </div>
+    </div>
+
+    <!-- Bills Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bill #</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="relative px-6 py-3"><span class="sr-only">View</span></th>
+                    </tr>
+                </thead>
+               <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    {# THE FIX: Render with Jinja2, control with Alpine.js #}
+                    {% if bills_data %}
+                        {% for bill in bills_data %}
+                            <tr 
+                                {# This x-show directive will now work correctly #}
+                                x-show="
+                                    searchQuery === '' || 
+                                    '{{ bill.bill_number | lower }}'.includes(searchQuery.toLowerCase()) || 
+                                    ('{{ bill.vendor.name | lower if bill.vendor else '' }}'.includes(searchQuery.toLowerCase()))
+                                "
+                            >
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ bill.bill_date.split('T')[0] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">{{ bill.bill_number }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ bill.vendor.name if bill.vendor else 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-300">{{ "%.2f"|format(bill.total_amount) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if bill.status == 'Paid' %} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                                        {% elif bill.status == 'Partially Paid' %} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                                        {% else %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 {% endif %}">
+                                        {{ bill.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                     <a href="/purchases/{{ bill.id }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-10 text-sm text-gray-500 dark:text-gray-400">
+                                No purchase bills have been created yet.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+   
+        </div>
+    </div>
+</div>
+{% endblock %}

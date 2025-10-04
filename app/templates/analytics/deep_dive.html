@@ -1,0 +1,84 @@
+{# Create new file: app/templates/analytics/deep_dive.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Deep Dive Analyzer</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Click on a segment to drill down into your data.</p>
+    </header>
+
+    <!-- Filter Form -->
+    <form hx-get="/analytics/deep-dive" hx-target="body" hx-swap="innerHTML" hx-push-url="true" class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+            <div>
+                <label for="metric" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Metric to Analyze</label>
+                <select name="metric" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700">
+                    {% for option in metric_options %}
+                    <option value="{{ option }}" {% if filters.metric == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="start_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date</label>
+                <input type="date" name="start_date" value="{{ filters.start_date.strftime('%Y-%m-%d') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700">
+            </div>
+            <div>
+                <label for="end_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date</label>
+                <input type="date" name="end_date" value="{{ filters.end_date.strftime('%Y-%m-%d') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700">
+            </div>
+            <div>
+                <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-8 py-2.5">Analyze</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Chart Area -->
+    <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm" x-data="deepDiveChart()" x-init="init()">
+        {% if breakdown_data %}
+            <div id="deep-dive-chart" style="height: 600px;"></div>
+            <script id="breakdown-data" type="application/json">
+                {{ breakdown_data | tojson | safe }}
+            </script>
+        {% else %}
+            <div class="p-10 text-center border-2 border-dashed dark:border-gray-700 rounded-lg">
+                <p class="text-gray-500">No data available for the selected metric and period.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('deepDiveChart', () => ({
+        init() {
+            const dataEl = document.getElementById('breakdown-data');
+            if (!dataEl) return;
+            const data = JSON.parse(dataEl.textContent);
+            const chartDom = document.getElementById('deep-dive-chart');
+            const myChart = echarts.init(chartDom, 'dark');
+            const option = {
+                series: {
+                    type: 'sunburst',
+                    data: data,
+                    radius: [60, '90%'],
+                    label: {
+                        rotate: 'radial'
+                    },
+                    emphasis: {
+                        focus: 'ancestor'
+                    }
+                },
+                tooltip: {
+                    formatter: function (params) {
+                        return `${params.name}: <strong>${params.value.toFixed(2)}</strong> (${params.percent}%)`;
+                    }
+                }
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        }
+    }));
+});
+</script>
+{% endblock %}

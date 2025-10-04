@@ -1,0 +1,8 @@
+{# app/templates/jarvis/partials/jarvis_message.html #}
+<!-- Jarvis's Response Bubble -->
+<div class="flex justify-start">
+    <div class="prose prose-sm dark:prose-invert bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200 p-4 rounded-lg max-w-lg">
+        {# The 'safe' filter tells Jinja2 to render the HTML tags instead of escaping them #}
+        {{ message | safe }}
+    </div>
+</div>

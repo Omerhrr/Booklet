@@ -1,0 +1,129 @@
+{# Create new file: app/templates/analytics/financial_health.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% macro ratio_card(title, value, unit, trend_data, chart_id, explanation, good_threshold, caution_threshold) %}
+    {% set is_good = value >= good_threshold %}
+    {% set is_caution = not is_good and value >= caution_threshold %}
+    {% set is_danger = not is_good and not is_caution %}
+
+    <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="flex justify-between items-start">
+            <div>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ title }}</h3>
+                <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(value) }}{{ unit }}</p>
+            </div>
+            <div class="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center
+                {% if is_good %} bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400
+                {% elif is_caution %} bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400
+                {% else %} bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 {% endif %}">
+                
+                {% if is_good %}
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                {% elif is_caution %}
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                {% else %}
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                {% endif %}
+            </div>
+        </div>
+        <div id="{{ chart_id }}" class="mt-4" style="height: 100px;"></div>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ explanation }}</p>
+    </div>
+{% endmacro %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8" x-data="financialHealth()" x-init="init()">
+    <header class="mb-8">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Financial Health Scorecard</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Key performance ratios for your business as of {{ as_of_date.strftime('%B %d, %Y') }}.</p>
+    </header>
+
+    <!-- Scorecard Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{ ratio_card(
+            title='Gross Profit Margin',
+            value=ratio_data.current.gross_profit_margin,
+            unit='%',
+            trend_data=ratio_data.trends.gross_profit_margin,
+            chart_id='gpm-chart',
+            explanation='Measures the profitability of your products/services before overhead costs. Higher is better.',
+            good_threshold=40,
+            caution_threshold=20
+        ) }}
+        {{ ratio_card(
+            title='Net Profit Margin',
+            value=ratio_data.current.net_profit_margin,
+            unit='%',
+            trend_data=ratio_data.trends.net_profit_margin,
+            chart_id='npm-chart',
+            explanation='Measures the overall profitability of the business after all expenses. Higher is better.',
+            good_threshold=15,
+            caution_threshold=5
+        ) }}
+        {{ ratio_card(
+            title='Current Ratio',
+            value=ratio_data.current.current_ratio,
+            unit='',
+            trend_data=ratio_data.trends.current_ratio,
+            chart_id='cr-chart',
+            explanation='Measures your ability to pay short-term debts. A ratio above 1.5 is generally considered healthy.',
+            good_threshold=1.5,
+            caution_threshold=1.0
+        ) }}
+    </div>
+</div>
+
+<script id="ratio-trend-data" type="application/json">
+    {{ ratio_data.trends | tojson | safe }}
+</script>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('financialHealth', () => ({
+        trendData: {},
+        init() {
+            const dataEl = document.getElementById('ratio-trend-data');
+            if (!dataEl) return;
+            this.trendData = JSON.parse(dataEl.textContent);
+            
+            this.$nextTick(() => {
+                this.renderChart('gpm-chart', this.trendData.gross_profit_margin, '#22c55e');
+                this.renderChart('npm-chart', this.trendData.net_profit_margin, '#3b82f6');
+                this.renderChart('cr-chart', this.trendData.current_ratio, '#8b5cf6');
+            });
+        },
+        renderChart(elementId, data, color) {
+            const chartDom = document.getElementById(elementId);
+            if (!chartDom) return;
+            const myChart = echarts.init(chartDom, 'dark');
+            const option = {
+                grid: { left: 0, right: 0, top: 10, bottom: 0 },
+                xAxis: { type: 'category', show: false, data: this.trendData.labels },
+                yAxis: { type: 'value', show: false },
+                tooltip: { trigger: 'axis' },
+                series: [{
+                    data: data,
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'none',
+                    lineStyle: { color: color, width: 3 },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                            offset: 0,
+                            color: color,
+                            opacity: 0.3
+                        }, {
+                            offset: 1,
+                            color: color,
+                            opacity: 0
+                        }])
+                    }
+                }]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        }
+    }));
+});
+</script>
+{% endblock %}

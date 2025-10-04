@@ -1,0 +1,79 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% macro budget_table(title, lines, type) %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden mb-8">
+    <div class="p-6 border-b dark:border-gray-700">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ title }}</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/3">Account</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Budgeted</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/4">Performance</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% for line in lines %}
+                {% set performance_pct = (line.actual_amount / line.budgeted_amount * 100) if line.budgeted_amount > 0 else 0 %}
+                <tr>
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ line.account_name }}</td>
+                    <td class="px-6 py-4 text-sm text-right text-gray-500 dark:text-gray-300">{{ "%.2f"|format(line.budgeted_amount) }}</td>
+                    <td class="px-6 py-4 text-sm text-right text-gray-500 dark:text-gray-300">{{ "%.2f"|format(line.actual_amount) }}</td>
+                    <td class="px-6 py-4 text-sm text-right font-medium {% if line.variance > 0 and type == 'revenue' %}text-green-500{% elif line.variance > 0 and type == 'expense' %}text-red-500{% elif line.variance < 0 and type == 'expense' %}text-green-500{% else %}text-red-500{% endif %}">
+                        {{ "%.2f"|format(line.variance) }} ({{ "%.1f"|format(line.variance_percent) }}%)
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-600">
+                            {% set bar_color = 'bg-green-600' if performance_pct < 90 else ('bg-yellow-400' if performance_pct <= 100 else 'bg-red-600') %}
+                            {% if type == 'revenue' %}
+                                {% set bar_color = 'bg-green-600' %}
+                            {% endif %}
+                            <div class="{{ bar_color }} h-2.5 rounded-full" style="width: {{ [performance_pct, 100]|min }}%"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="bg-gray-100 dark:bg-gray-700/50">
+                {% set total_budget = lines|sum(attribute='budgeted_amount') %}
+                {% set total_actual = lines|sum(attribute='actual_amount') %}
+                {% set total_variance = total_actual - total_budget %}
+                <tr>
+                    <td class="px-6 py-3 text-left font-bold text-gray-900 dark:text-white">Total</td>
+                    <td class="px-6 py-3 text-right font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(total_budget) }}</td>
+                    <td class="px-6 py-3 text-right font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(total_actual) }}</td>
+                    <td class="px-6 py-3 text-right font-bold text-gray-900 dark:text-white">{{ "%.2f"|format(total_variance) }}</td>
+                    <td class="px-6 py-3"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Budget vs. Actuals Report</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Comparing performance for <span class="font-semibold text-blue-500">{{ budget.name }}</span>
+            </p>
+        </div>
+        <div>
+            <a href="/budgeting/" class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:underline">
+                &larr; Back to All Budgets
+            </a>
+        </div>
+    </div>
+
+    {{ budget_table("Revenue Performance", revenue_lines, 'revenue') }}
+    {{ budget_table("Expense Performance", expense_lines, 'expense') }}
+
+</div>
+{% endblock %}

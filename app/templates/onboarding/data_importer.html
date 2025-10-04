@@ -1,0 +1,56 @@
+{# Create new file: app/templates/onboarding/data_importer.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-6 text-center">
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Onboarding Assistant</h1>
+            <p class="mt-2 text-lg text-gray-500 dark:text-gray-400">Import your existing data using AI. Just copy and paste from your spreadsheet.</p>
+        </div>
+
+        <!-- HTMX Form for Analysis -->
+        <form 
+            hx-post="/onboarding/data-importer/analyze"
+            hx-target="#importer-result"
+            hx-swap="innerHTML"
+            hx-indicator="#loading-spinner"
+            class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+        >
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                <div class="md:col-span-2">
+                    <label for="raw_data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">1. Paste your data here</label>
+                    <textarea name="raw_data" id="raw_data" rows="10" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 font-mono dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., Copy rows from Excel, Numbers, or Google Sheets..."></textarea>
+                </div>
+                <div>
+                    <label for="data_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">2. Select data type</label>
+                    <select name="data_type" id="data_type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        <option value="customers">Customers</option>
+                        <option value="vendors">Vendors</option>
+                        <option value="products">Products</option>
+                    </select>
+                    <div class="mt-6">
+                        <button type="submit" class="w-full text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                            3. Analyze Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="htmx-indicator text-center p-8">
+            <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-2 text-sm text-gray-500">AI is processing your data... this may take a moment.</p>
+        </div>
+
+        <!-- Result Area -->
+        <div id="importer-result" class="mt-8">
+            <!-- The confirmation or error partial will be loaded here -->
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{# In: app/templates/accounting/partials/liability_ledger_panel.html #}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Ledger Table -->
+    <div class="lg:col-span-2">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ title }} History</h3>
+                <div>
+                    <span class="text-sm text-gray-500 dark:text-gray-400">Balance Due:</span>
+                    <span class="text-xl font-bold text-red-600 dark:text-red-500">{{ "%.2f"|format(balance) }}</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Debit (-)</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit (+)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for entry in entries %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-300">{{ entry.transaction_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-300">{{ entry.description }}</td>
+                            <td class="px-6 py-4 text-sm text-right text-green-500">{{ "%.2f"|format(entry.debit) if entry.debit > 0 else '' }}</td>
+                            <td class="px-6 py-4 text-sm text-right text-red-500">{{ "%.2f"|format(entry.credit) if entry.credit > 0 else '' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center py-10 text-gray-500">No transactions found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Payment Form -->
+    <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Record {{ title }} Payment</h3>
+            <form action="/accounting/payroll-liabilities/pay" method="post" class="space-y-4">
+                <input type="hidden" name="liability_account_name" value="{{ account_name }}">
+                <div>
+                    <label for="payment_date_{{ account_name }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Payment Date</label>
+                    <input type="date" name="payment_date" id="payment_date_{{ account_name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <div>
+                    <label for="amount_{{ account_name }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Amount Paid</label>
+                    <input type="number" step="0.01" name="amount" id="amount_{{ account_name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <div>
+                    <label for="paid_from_{{ account_name }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Paid From Account</label>
+                    <select name="paid_from_account_id" id="paid_from_{{ account_name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        {% for account in payment_accounts %}
+                        <option value="{{ account.id }}">{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="desc_{{ account_name }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description / Memo</label>
+                    <input type="text" name="description" id="desc_{{ account_name }}" placeholder="e.g., Payment for {{ title }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save Payment</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('payment_date_{{ account_name }}').value = new Date().toISOString().split('T')[0];
+</script>

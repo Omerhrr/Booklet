@@ -1,0 +1,73 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% macro transaction_list(title, transactions, type) %}
+    <div class="mb-6">
+        <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-2">{{ title }}</h4>
+        <ul class="divide-y divide-gray-200 dark:divide-gray-700 border-t border-b dark:border-gray-700">
+            {% for txn in transactions %}
+            <li class="py-2 flex justify-between items-center">
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ txn.transaction_date.strftime('%Y-%m-%d') }} - {{ txn.description }}</span>
+                <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                    {% if type == 'debit' %}{{ "%.2f"|format(txn.debit) }}{% else %}{{ "%.2f"|format(txn.credit) }}{% endif %}
+                </span>
+            </li>
+            {% else %}
+            <li class="py-2 text-sm text-gray-500">None</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endmacro %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="print:hidden flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Reconciliation Report</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Summary for {{ report_data.account.name }} as of {{ report_data.reconciliation.statement_date.strftime('%B %d, %Y') }}.</p>
+        </div>
+        <div>
+            <a href="/banking/reconciliation" class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">&larr; Back to Reconciliation</a>
+            <button onclick="window.print()" class="ml-4 text-white bg-gray-700 hover:bg-gray-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Print</button>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ user.business.name }}</h2>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300">Reconciliation Summary</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ report_data.account.name }} | For the period ending {{ report_data.reconciliation.statement_date.strftime('%B %d, %Y') }}</p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Summary Table -->
+            <table class="min-w-full mb-8">
+                <tbody>
+                    <tr class="border-b dark:border-gray-700">
+                        <td class="py-2 text-gray-600 dark:text-gray-300">Statement Ending Balance</td>
+                        <td class="py-2 text-right font-semibold text-gray-800 dark:text-gray-200">{{ "%.2f"|format(report_data.reconciliation.statement_balance) }}</td>
+                    </tr>
+                    <tr class="border-b dark:border-gray-700">
+                        <td class="py-2 text-gray-600 dark:text-gray-300">Uncleared Transactions</td>
+                        <td class="py-2 text-right font-semibold text-gray-800 dark:text-gray-200">{{ "%.2f"|format(report_data.uncleared_transactions|sum(attribute='debit') - report_data.uncleared_transactions|sum(attribute='credit')) }}</td>
+                    </tr>
+                    <tr class="border-t-2 border-black dark:border-white">
+                        <td class="pt-2 font-bold text-gray-900 dark:text-white">Adjusted Bank Balance</td>
+                        <td class="pt-2 text-right font-bold text-lg text-gray-900 dark:text-white">{{ "%.2f"|format(report_data.reconciliation.statement_balance - (report_data.uncleared_transactions|sum(attribute='debit') - report_data.uncleared_transactions|sum(attribute='credit'))) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Cleared Transactions -->
+            {{ transaction_list("Cleared Deposits and Other Credits", report_data.cleared_transactions|selectattr('debit', '>', 0)|list, 'debit') }}
+            {{ transaction_list("Cleared Checks and Payments", report_data.cleared_transactions|selectattr('credit', '>', 0)|list, 'credit') }}
+
+            <!-- Uncleared Transactions -->
+            <div class="mt-10 pt-6 border-t-2 border-dashed dark:border-gray-600">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Uncleared Items Summary</h3>
+                {{ transaction_list("Uncleared Deposits and Other Credits", report_data.uncleared_transactions|selectattr('debit', '>', 0)|list, 'debit') }}
+                {{ transaction_list("Uncleared Checks and Payments", report_data.uncleared_transactions|selectattr('credit', '>', 0)|list, 'credit') }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

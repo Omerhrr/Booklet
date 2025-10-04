@@ -1,0 +1,40 @@
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="md:col-span-2">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Product Details</h3>
+        <dl class="mt-4 grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Category</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ product.category.name }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Unit</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ product.unit }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Branch</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ product.branch.name }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Purchase Price</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ "%.2f"|format(product.purchase_price) }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Sales Price</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-white">{{ "%.2f"|format(product.sales_price) }}</dd>
+            </div>
+        </dl>
+    </div>
+    <div class="md:col-span-1">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Stock Levels</h3>
+        <dl class="mt-4 grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Opening Stock</dt>
+                <dd class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ product.opening_stock }}</dd>
+            </div>
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Current Stock</dt>
+                <dd class="mt-1 text-lg font-semibold text-green-600 dark:text-green-400">{{ product.stock_quantity }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>

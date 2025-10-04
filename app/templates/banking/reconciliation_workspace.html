@@ -1,0 +1,194 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<script id="reconciliation-data" type="application/json">
+    {
+        "openingBalance": {{ opening_balance or 0.0 }},
+        "transactions": {{ transactions_json | tojson }}
+    }
+</script>
+
+{# THE DEFINITIVE FIX: Pass only simple, safe values to x-init #}
+<div class="py-10 px-4 sm:px-6 lg:px-8" 
+    x-data="reconciliationWorkspace()" 
+    x-init="init(
+        {{ account.id }}, 
+        '{{ account.name | e }}'
+    )"
+>
+    <form method="POST" :action="`/banking/reconciliation/${accountId}`" @submit.prevent="submitForm" id="reconciliation-form">
+        <input type="hidden" name="cleared_ids_json" :value="JSON.stringify(clearedTransactionIds)">
+
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                {# Use the Alpine variable for the title now #}
+                <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white" x-text="`Reconcile: ${accountName}`"></h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Check off transactions that appear on your bank statement.</p>
+            </div>
+            <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md w-full max-w-sm sticky top-24">
+                <h3 class="font-bold text-lg mb-4 text-gray-900 dark:text-white">Summary</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Book Balance</span><span class="font-medium text-gray-700 dark:text-gray-300" x-text="formatCurrency(openingBalance)"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Cleared Deposits</span><span class="font-medium text-green-600 dark:text-green-400" x-text="formatCurrency(clearedDeposits)"></span></div>
+                    <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Cleared Payments</span><span class="font-medium text-red-600 dark:text-red-500" x-text="'-' + formatCurrency(clearedPayments)"></span></div>
+                    <hr class="dark:border-gray-600">
+                    <div class="flex justify-between font-bold"><span class="text-gray-800 dark:text-gray-200">Cleared Balance</span><span class="text-gray-800 dark:text-gray-200" x-text="formatCurrency(clearedBalance)"></span></div>
+                    <div class="flex justify-between font-bold"><span class="text-gray-800 dark:text-gray-200">Statement Balance</span><span class="text-gray-800 dark:text-gray-200" x-text="formatCurrency(statementBalance)"></span></div>
+                    <hr class="dark:border-gray-600">
+                    <div class="p-2 rounded-lg" :class="difference === 0 ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'">
+                        <div class="flex justify-between font-bold text-lg" :class="difference === 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'">
+                            <span>Difference</span>
+                            <span x-text="formatCurrency(difference)"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statement Info & Transactions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Statement Info -->
+                <div class="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">1. Enter Statement Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="statement_balance" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Statement Ending Balance</label>
+                            <input type="number" step="0.01" name="statement_balance" x-model.number="statementBalance" @input="calculate" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        </div>
+                        <div>
+                            <label for="statement_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Statement Ending Date</label>
+                            <input type="date" name="statement_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transactions -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">2. Select Cleared Transactions</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-px">
+                        <!-- Deposits -->
+                        <div class="bg-gray-50 dark:bg-gray-800/50">
+                            <div class="p-4 border-b border-t dark:border-gray-700 flex justify-between items-center">
+                                <h4 class="font-semibold text-gray-800 dark:text-gray-200">Deposits and Other Credits</h4>
+                                <span class="text-green-600 dark:text-green-400 font-bold" x-text="formatCurrency(clearedDeposits)"></span>
+                            </div>
+                            <ul class="divide-y dark:divide-gray-700 max-h-96 overflow-y-auto">
+                                <template x-for="txn in deposits" :key="txn.id">
+                                    <li class="p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" :value="txn.id" x-model="txn.cleared" @change="calculate" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <div class="ml-3 text-sm">
+                                                <p class="font-medium text-gray-900 dark:text-gray-200" x-text="txn.description"></p>
+                                                <p class="text-gray-500 dark:text-gray-400" x-text="txn.transaction_date.split('T')[0]"></p>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-200" x-text="formatCurrency(txn.debit)"></p>
+                                    </li>
+                                </template>
+                                <template x-if="deposits.length === 0">
+                                    <li class="p-8 text-center text-sm text-gray-500">No deposits to reconcile.</li>
+                                </template>
+                            </ul>
+                        </div>
+                        <!-- Payments -->
+                        <div class="bg-gray-50 dark:bg-gray-800/50">
+                            <div class="p-4 border-b border-t dark:border-gray-700 flex justify-between items-center">
+                                <h4 class="font-semibold text-gray-800 dark:text-gray-200">Checks and Payments</h4>
+                                <span class="text-red-600 dark:text-red-500 font-bold" x-text="formatCurrency(clearedPayments)"></span>
+                            </div>
+                            <ul class="divide-y dark:divide-gray-700 max-h-96 overflow-y-auto">
+                                <template x-for="txn in payments" :key="txn.id">
+                                    <li class="p-4 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" :value="txn.id" x-model="txn.cleared" @change="calculate" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <div class="ml-3 text-sm">
+                                                <p class="font-medium text-gray-900 dark:text-gray-200" x-text="txn.description"></p>
+                                                <p class="text-gray-500 dark:text-gray-400" x-text="txn.transaction_date.split('T')[0]"></p>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-200" x-text="formatCurrency(txn.credit)"></p>
+                                    </li>
+                                </template>
+                                <template x-if="payments.length === 0">
+                                    <li class="p-8 text-center text-sm text-gray-500">No payments to reconcile.</li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Sticky Summary (for mobile) and Submit Button -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24">
+                    <button type="submit" class="w-full text-white font-medium rounded-lg text-lg px-5 py-4 text-center" :class="{ 'bg-blue-700 hover:bg-blue-800': difference === 0, 'bg-gray-400 cursor-not-allowed': difference !== 0 }" :disabled="difference !== 0">
+                        Reconcile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function reconciliationWorkspace() {
+    return {
+        accountId: null,
+        accountName: '',
+        openingBalance: 0,
+        transactions: [],
+        deposits: [],
+        payments: [],
+        statementBalance: null,
+        clearedDeposits: 0,
+        clearedPayments: 0,
+        clearedBalance: 0,
+        difference: null,
+
+        init(accId, accName) {
+            this.accountId = accId;
+            this.accountName = accName;
+
+            const dataEl = document.getElementById('reconciliation-data');
+            const data = JSON.parse(dataEl.textContent);
+
+            this.openingBalance = data.openingBalance;
+            this.transactions = data.transactions.map(t => ({ ...t, cleared: false }));
+            this.deposits = this.transactions.filter(t => t.debit > 0);
+            this.payments = this.transactions.filter(t => t.credit > 0);
+            this.calculate();
+        },
+        
+        get clearedTransactionIds() {
+            return this.transactions.filter(t => t.cleared).map(t => t.id);
+        },
+
+        calculate() {
+            this.clearedDeposits = this.deposits.filter(t => t.cleared).reduce((sum, t) => sum + t.debit, 0);
+            this.clearedPayments = this.payments.filter(t => t.cleared).reduce((sum, t) => sum + t.credit, 0);
+            
+            this.clearedBalance = this.openingBalance + this.clearedDeposits - this.clearedPayments;
+            
+            const diff = this.clearedBalance - (this.statementBalance || 0);
+            this.difference = Math.abs(diff) < 0.01 ? 0 : diff;
+        },
+
+        formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: '{{ user.selected_branch.currency }}' }).format(value || 0);
+        },
+
+        submitForm() {
+            if (this.difference === 0) {
+                document.getElementById('reconciliation-form').submit();
+            } else {
+                alert('The difference must be zero to reconcile.');
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Journal Entry History</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A record of all manual journal entries for <span class="font-semibold text-blue-500">{{ user.selected_branch.name }}</span>.</p>
+        </div>
+        {% if 'accounting:create' in user_perms %}
+        <div>
+            <a href="/accounting/journal/new" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                Create New Entry
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Voucher #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for voucher in vouchers %}
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-300">{{ voucher.transaction_date.strftime('%Y-%m-%d') }}</td>
+                        {# THE FIX: Make the voucher number a link to the detail page #}
+                        <td class="px-6 py-4 text-sm font-medium text-blue-400 hover:underline">
+                            <a href="/accounting/journal/{{ voucher.id }}">{{ voucher.voucher_number }}</a>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-400">{{ voucher.description }}</td>
+                        <td class="px-6 py-4 text-sm text-right font-semibold text-gray-300">
+                            {{ "%.2f"|format(voucher.ledger_entries|sum(attribute='debit')) }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center py-10 text-gray-500">No journal entries have been recorded for this branch.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{# app/templates/jarvis/chat.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="h-screen flex flex-col" style="height: calc(100vh - 4.5rem);">
+    <!-- Header -->
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Jarvis AI Analyst</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Ask questions about your business data in plain English. Currently analyzing: <span class="font-semibold text-blue-500">{{ user.selected_branch.name }}</span></p>
+    </div>
+
+    <!-- Chat History -->
+    <div id="chat-history" class="flex-1 overflow-y-auto p-6 space-y-4">
+        <!-- Initial Welcome Message -->
+   {#      {% include "jarvis/partials/jarvis_message.html" with context={"message": "Hello, I am Jarvis. How can I help you analyze your business data today? Try asking 'Who are my top 5 customers by sales?' or 'What are my total expenses this year?'"} %} #}
+{#         {% set welcome_message = "Hello, I am Jarvis. How can I help you analyze your business data today? Try asking 'Who are my top 5 customers by sales?' or 'What are my total expenses this year?'" %}
+{% include "jarvis/partials/jarvis_message.html" with message=welcome_message %} #}
+{% with message="Hello, I am Jarvis. How can I help you analyze your business data today? Try asking 'Who are my top 5 customers by sales?' or 'What are my total expenses this year?'" %}
+    {% include "jarvis/partials/jarvis_message.html" %}
+{% endwith %}
+    </div>
+
+    <!-- Input Form -->
+    <div class="p-4 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+        <form 
+            hx-post="/jarvis/ask"
+            hx-target="#chat-history"
+            hx-swap="beforeend"
+            hx-on::after-request="this.reset()"
+            class="flex items-center space-x-4"
+        >
+            {# This hidden input is the key to our secure architecture. It sends the entire data context with each request. #}
+            <input type="hidden" name="business_data_json" value="{{ business_data_json | e }}">
+            
+            <input 
+                type="text" 
+                name="user_question"
+                class="flex-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"
+                placeholder="Ask a question..."
+                required
+            >
+            <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                Ask
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

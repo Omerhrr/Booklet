@@ -1,0 +1,58 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Payslip History</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A record of all processed payroll runs.</p>
+        </div>
+        <div>
+            <a href="/hr/payroll/run" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                Run New Payroll
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pay Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pay Period</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Gross Pay</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Deductions</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Net Pay</th>
+                        <th scope="col" class="relative px-6 py-3"><span class="sr-only">View</span></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    {% for slip in payslips %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ slip.pay_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ slip.employee.full_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {{ slip.pay_period_start.strftime('%b %d') }} - {{ slip.pay_period_end.strftime('%b %d, %Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">{{ "%.2f"|format(slip.gross_pay) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-red-500">{{ "%.2f"|format(slip.total_deductions) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-500">{{ "%.2f"|format(slip.net_pay) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="/hr/payslips/{{ slip.id }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">View Details</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                                No payslips have been generated yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

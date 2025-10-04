@@ -1,0 +1,11 @@
+
+<tr id="bank-account-row-{{ account.id }}">
+    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ account.account_name }}</td>
+    <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ account.bank_name or 'N/A' }}</td>
+    <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ account.account_number or 'N/A' }}</td>
+    <td class="px-6 py-4 text-right space-x-4">
+        {# THE FIX: Point to the new detail page, using the chart_of_account_id #}
+        <a href="/banking/accounts/{{ account.chart_of_account_id }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View Ledger</a>
+        <a href="/banking/reconciliation?account_id={{ account.chart_of_account_id }}" class="font-medium text-green-600 dark:text-green-500 hover:underline">Reconcile</a>
+    </td>
+</tr>

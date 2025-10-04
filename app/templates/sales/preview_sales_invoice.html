@@ -1,0 +1,88 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Preview Sales Invoice</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Please review the details below before saving.</p>
+        </div>
+        <div>
+            <!-- This form submits all the data to the final creation endpoint -->
+            <form method="POST" action="/sales/new-invoice">
+                <input type="hidden" name="customer_id" value="{{ customer_id }}">
+                <input type="hidden" name="invoice_date" value="{{ invoice_date.strftime('%Y-%m-%d') }}">
+                <input type="hidden" name="due_date" value="{{ due_date.strftime('%Y-%m-%d') }}">
+                <input type="hidden" name="items_json" value="{{ items_json_for_save | e }}">
+
+                <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                    Confirm and Save
+                </button>
+                <a href="/sales/new-invoice" class="ml-2 text-gray-600 dark:text-gray-300 hover:underline">Cancel</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Preview Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
+        <!-- Invoice Header -->
+        <div class="flex justify-between items-start mb-8 pb-8 border-b dark:border-gray-700">
+            <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Customer</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ customer_name }}</p>
+            </div>
+            <div class="text-right">
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">SALES INVOICE</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ invoice_number }}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-8 mb-8">
+             <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Invoice Date</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ invoice_date.strftime('%B %d, %Y') }}</p>
+            </div>
+            <div class="text-right">
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Due Date</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ due_date.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="min-w-full mb-8">
+            <thead>
+                <tr>
+                    <th class="pb-2 text-left text-sm font-semibold text-gray-900 dark:text-white">Product</th>
+                    <th class="pb-2 text-right text-sm font-semibold text-gray-900 dark:text-white">Quantity</th>
+                    <th class="pb-2 text-right text-sm font-semibold text-gray-900 dark:text-white">Price</th>
+                    <th class="pb-2 text-right text-sm font-semibold text-gray-900 dark:text-white">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items_for_preview %}
+                <tr class="border-b dark:border-gray-700">
+                    <td class="py-3 text-left text-gray-300">{{ item.product_name }}</td>
+                    <td class="py-3 text-right text-gray-300">{{ item.quantity }}</td>
+                    <td class="py-3 text-right text-gray-300">{{ "%.2f"|format(item.price) }}</td>
+                    <td class="py-3 text-right text-gray-300">{{ "%.2f"|format(item.line_total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="flex justify-end">
+            <div class="w-full max-w-xs space-y-2">
+                <div class="flex justify-between text-gray-900 dark:text-white">
+                    <span class="font-medium">Subtotal</span>
+                    <span>{{ "%.2f"|format(total_amount) }}</span>
+                </div>
+                <div class="flex justify-between text-xl font-bold text-gray-900 dark:text-white border-t pt-2 dark:border-gray-600">
+                    <span>Grand Total</span>
+                    <span>{{ "%.2f"|format(total_amount) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

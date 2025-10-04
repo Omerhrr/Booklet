@@ -1,0 +1,39 @@
+
+<tr id="product-edit-form-{{ product.id }}">
+    <td class="px-2 py-2"><input type="text" name="name" value="{{ product.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></td>
+    <td class="px-2 py-2"><input type="text" name="sku" value="{{ product.sku or '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></td>
+    <td class="px-2 py-2">
+        <select name="category_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if category.id == product.category_id %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+
+     <td class="px-2 py-2">
+        <label for="unit-edit" class="sr-only">Unit</label>
+        <input type="text" name="unit" id="unit-edit" value="{{ product.unit or '' }}" class="bg-gray-50 border border-gray-300 text-gray-200 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., pcs">
+    </td>
+    <td class="px-2 py-2"><input type="number" step="0.01" name="purchase_price" value="{{ '%.2f'|format(product.purchase_price) }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></td>
+    <td class="px-2 py-2"><input type="number" step="0.01" name="sales_price" value="{{ '%.2f'|format(product.sales_price) }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></td>
+   
+    <td class="px-2 py-2">
+        <span class="text-sm text-gray-500 dark:text-gray-400">{{ product.opening_stock }}</span>
+    </td>
+    <td class="px-2 py-2">
+        <span class="text-sm text-gray-500 dark:text-gray-400">{{ product.stock_quantity }}</span>
+    </td>
+    <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
+        <button hx-put="/inventory/products/{{ product.id }}" 
+                hx-include="closest tr"
+                hx-target="closest tr" 
+                hx-swap="outerHTML"
+                class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300">
+            Save
+        </button>
+        <button type="button" hx-get="/inventory/products/{{ product.id }}/row" hx-target="closest tr" hx-swap="outerHTML"
+                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            Cancel
+        </button>
+    </td>
+</tr>

@@ -1,0 +1,89 @@
+{# app/templates/hr/new_employee.html #}
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Add New Employee</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    This employee will be added to the <span class="font-semibold text-blue-500">{{ selected_branch.name }}</span> branch.
+                </p>
+            </div>
+            <div>
+                <a href="/hr/employees" class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">
+                    &larr; Back to All Employees
+                </a>
+            </div>
+        </div>
+
+        <form action="/hr/employees/new" method="post">
+            <!-- Personal Information Section -->
+            <div class="mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-3 mb-6 dark:border-gray-700">Personal Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="full_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name</label>
+                        <input type="text" name="full_name" id="full_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email Address</label>
+                        <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label for="phone_number" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone Number</label>
+                        <input type="tel" name="phone_number" id="phone_number" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="hire_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hire Date</label>
+                        <input type="date" name="hire_date" id="hire_date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
+                        <textarea name="address" id="address" rows="3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payroll Configuration Section -->
+            <div class="mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white border-b pb-3 mb-6 dark:border-gray-700">Payroll Configuration</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="pay_frequency" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pay Frequency</label>
+                        <select name="pay_frequency" id="pay_frequency" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                            {% for freq in pay_frequencies %}
+                            <option value="{{ freq }}">{{ freq }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="gross_salary" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Gross Salary (per frequency)</label>
+                        <input type="number" step="0.01" name="gross_salary" id="gross_salary" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label for="paye_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PAYE (Tax) Rate (%)</label>
+                        <input type="number" step="0.01" name="paye_rate" id="paye_rate" placeholder="e.g., 20 for 20%" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="pension_employee_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pension (Employee Share %)</label>
+                        <input type="number" step="0.01" name="pension_employee_rate" id="pension_employee_rate" placeholder="e.g., 8 for 8%" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="pension_employer_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pension (Employer Share %)</label>
+                        <input type="number" step="0.01" name="pension_employer_rate" id="pension_employer_rate" placeholder="e.g., 10 for 10%" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save Employee</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    document.getElementById('hire_date').value = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+<form id="employee-info-section"
+      hx-put="/hr/employees/{{ employee.id }}/edit-info"
+      hx-target="this"
+      hx-swap="outerHTML"
+      class="p-6 bg-white dark:bg-gray-900/50 rounded-lg shadow-sm">
+    <div class="flex justify-between items-center border-b pb-3 mb-6 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Editing Personal Information</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label for="full_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name</label>
+            <input type="text" name="full_name" value="{{ employee.full_name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+        </div>
+        <div>
+            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+            <input type="email" name="email" value="{{ employee.email }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+        </div>
+        <div>
+            <label for="phone_number" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone</label>
+            <input type="text" name="phone_number" value="{{ employee.phone_number or '' }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+        </div>
+        <div>
+            <label for="hire_date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hire Date</label>
+            <input type="date" name="hire_date" value="{{ employee.hire_date.strftime('%Y-%m-%d') }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+        </div>
+        <div class="md:col-span-2">
+            <label for="address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
+            <textarea name="address" rows="3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">{{ employee.address or '' }}</textarea>
+        </div>
+    </div>
+    <div class="mt-6 flex items-center gap-4">
+        <button type="submit" class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save Changes</button>
+        <button type="button"
+                hx-get="/hr/employees/{{ employee.id }}/edit-info"
+                hx-target="#employee-info-section"
+                hx-swap="outerHTML"
+                class="text-sm font-medium text-red-600 dark:text-red-500 hover:underline">Cancel</button>
+    </div>
+</form>

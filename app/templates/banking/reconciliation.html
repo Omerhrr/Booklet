@@ -1,0 +1,51 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div 
+    class="py-10 px-4 sm:px-6 lg:px-8"
+    {# Alpine.js data to handle the auto-load #}
+    x-data="{ selectedAccountId: {{ selected_account_id or 'null' }} }"
+    x-init="if (selectedAccountId) { 
+        htmx.trigger('#account_selector', 'change'); 
+    }"
+>
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Bank Reconciliation</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Match your book transactions to your bank statement.</p>
+    </div>
+
+    <!-- Account Selector -->
+ <div class="max-w-md mb-8">
+        <label for="account_selector" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select an Account to Reconcile</label>
+        <select 
+            id="account_selector"
+            name="account_id"
+            x-model="selectedAccountId" 
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"
+            hx-get="/banking/reconciliation/load"
+            hx-target="#reconciliation-workspace"
+            hx-indicator="#loading-spinner"
+            hx-trigger="change" 
+        >
+            <option value="">-- Select Bank or Cash Account --</option>
+            {% for account in payment_accounts %}
+            <option value="{{ account.id }}">{{ account.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="htmx-indicator text-center p-8">
+        <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-2 text-sm text-gray-500">Loading Transactions...</p>
+    </div>
+
+    <!-- Reconciliation Workspace (loaded via HTMX ) -->
+    <div id="reconciliation-workspace">
+        <!-- Partial content will be loaded here -->
+    </div>
+</div>
+{% endblock %}

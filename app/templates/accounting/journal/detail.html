@@ -1,0 +1,58 @@
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold leading-tight text-gray-900 dark:text-white">Journal Voucher: {{ voucher.voucher_number }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Details of the manual journal entry.</p>
+        </div>
+        <div>
+            <a href="/accounting/journal/history" class="text-sm font-medium text-blue-600 dark:text-blue-500 hover:underline">
+                &larr; Back to History
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8">
+        <!-- Header Info -->
+        <div class="grid grid-cols-2 gap-8 mb-8 pb-8 border-b dark:border-gray-700">
+            <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Date</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ voucher.transaction_date.strftime('%B %d, %Y') }}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Memo / Description</h4>
+                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ voucher.description }}</p>
+            </div>
+        </div>
+
+        <!-- Ledger Entries Table -->
+        <table class="min-w-full">
+            <thead class="border-b dark:border-gray-600">
+                <tr>
+                    <th class="py-2 text-left text-sm font-semibold text-gray-900 dark:text-white">Account</th>
+                    <th class="py-2 text-right text-sm font-semibold text-gray-900 dark:text-white">Debit</th>
+                    <th class="py-2 text-right text-sm font-semibold text-gray-900 dark:text-white">Credit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in voucher.ledger_entries %}
+                <tr class="border-b dark:border-gray-700">
+                    <td class="py-3 text-left text-gray-300">{{ entry.account.name }}</td>
+                    <td class="py-3 text-right text-gray-300">{{ "%.2f"|format(entry.debit) if entry.debit > 0 else '' }}</td>
+                    <td class="py-3 text-right text-gray-300">{{ "%.2f"|format(entry.credit) if entry.credit > 0 else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="border-t-2 border-gray-300 dark:border-gray-500">
+                <tr class="font-bold">
+                    <td class="py-3 text-left text-gray-200">Total</td>
+                    <td class="py-3 text-right text-gray-200">{{ "%.2f"|format(voucher.ledger_entries|sum(attribute='debit')) }}</td>
+                    <td class="py-3 text-right text-gray-200">{{ "%.2f"|format(voucher.ledger_entries|sum(attribute='credit')) }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

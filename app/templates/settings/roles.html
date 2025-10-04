@@ -1,0 +1,49 @@
+
+{% extends "_shared/dashboard_layout.html" %}
+
+{% block content %}
+<main class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Manage Roles</h1>
+                <p class="text-gray-500 dark:text-gray-400">Create custom roles for your team.</p>
+            </div>
+        </div>
+
+        <!-- Roles List -->
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg mb-8">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Role Name</th>
+                        <th scope="col" class="px-6 py-3">Description</th>
+                        <th scope="col" class="px-6 py-3"><span class="sr-only">Edit</span></th>
+                    </tr>
+                </thead>
+                <tbody hx-target="this" hx-swap="beforeend">
+                    {% for role in roles %}
+                        {% include "settings/partials/role_row.html" %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add New Role Form -->
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Add New Role</h2>
+            <form hx-post="/settings/roles" hx-on::after-request="this.reset()" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="md:col-span-1">
+                    <label for="role_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Role Name</label>
+                    <input type="text" id="role_name" name="role_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" placeholder="e.g., Warehouse Manager" required>
+                </div>
+                <div class="md:col-span-1">
+                    <label for="role_description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
+                    <input type="text" id="role_description" name="role_description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500" placeholder="Manages stock and inventory.">
+                </div>
+                <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Add Role</button>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}
