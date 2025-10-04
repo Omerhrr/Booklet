@@ -15,6 +15,7 @@ pydantic
 python-multipart
 email_validator==2.2.0
 numpy
-#scikit-learn
+scikit-learn
 weasyprint
 openpyxl
+python-dateutil
