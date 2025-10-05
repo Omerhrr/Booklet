@@ -31,3 +31,5 @@ openpyxl
 python-dateutil
 python-multipart
 markdown
+pydantic
+email-validator  # <-- ADD THIS LINE
