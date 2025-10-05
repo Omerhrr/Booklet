@@ -19,7 +19,7 @@ jinja2
 
 # AI & Analytics
 google-generativeai
-zai
+zai-sdk  # <-- CORRECTED THIS LINE
 numpy
 scikit-learn
 
@@ -32,4 +32,4 @@ python-dateutil
 python-multipart
 markdown
 pydantic
-email-validator  # <-- ADD THIS LINE
+email-validator
