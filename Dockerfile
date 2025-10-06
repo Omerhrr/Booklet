@@ -30,4 +30,5 @@ EXPOSE 8000
 
 # 8. Define the command to run your application using Gunicorn
 # Gunicorn is a production-ready web server for Python.
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:8000"]
+
